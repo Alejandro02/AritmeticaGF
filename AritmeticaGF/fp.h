@@ -18,8 +18,8 @@ typedef unsigned long long int uInt64;
 
 class Fp{
 private:
-    /*Primo que define el campo*/
-    static Fp primo;
+    /*Primo que define el campo y variable auxiliar*/
+    static Fp primo,auxiliar;
     /*Longitud en palabras del primo*/
     static int k;
     /*Numero maximo de digitos hexadecimales en una palabra*/
@@ -34,7 +34,7 @@ private:
 
 public:
     static void setP(std::string &primo);
-    static void imprimeP();
+    static Fp &getP();
 
     Fp();
     Fp(std::string numeroEnHex);
@@ -58,29 +58,45 @@ public:
     bool esImpar() const;
     bool esPar() const;
 
-    /*Arithmetic operators*/
-    Fp &operator +(Fp &b);
-    Fp &operator +(uInt64 n);
-    Fp &operator -(Fp &b);
-    Fp &operator -(uInt64 n);
-    Fp &operator *(Fp &b);
-    Fp &operator *(uInt64 n);
-    Fp &operator ^(Fp &e);
-    Fp &operator ^(uInt64 n);
+    /*Operadores aritmeticos*/
+    static void suma(Fp &a, Fp &b, Fp &resultado);
+    static void suma(Fp &a, uInt64 b, Fp &resultado);
 
-    /*Bitwise operators */
-    Fp &operator >>(int n);
-    Fp &operator <<(int n);
+    static void resta(Fp &a, Fp &b, Fp &resultado,bool permitirResultadosNegativos = false);
+    static void resta(Fp &a, uInt64 b, Fp &resultado,bool permitirResultadosNegativos = false);
+
+    static void multiplicacionBinariaIzquierdaADerecha(Fp &a, Fp &b, Fp &resultado);
+    /*TODO*/
+    static void multiplicacionClasica(Fp &a, Fp &b, Fp &resultado);
+    static void multiplicacionMontgomery(Fp &a, Fp &b, Fp &resultado);
+
+    static void exponenciacionBinariaIzquierdaADerecha(Fp &b, Fp &e, Fp &resultado);
+    static void exponenciacionBinariaDerechaAIzquierda(Fp &b, Fp &e, Fp &resultado);
+    static void exponenciacionBinariaSideChannels(Fp &b, Fp &e, Fp &resultado);
+    static void exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado);
+    static void exponenciacionVentanasDeslizantes(Fp &b, Fp &e, Fp &resultado);
+
+    void reduccionBarret();
+    void reduccionConRestauracion();
+    void reduccionSinRestauracion();
+    /*TODO end*/
+
+    /*Operadores a nivel bits*/
+    void operadorTilde();
+    void corrimientoUnBitDerecha();
+    void corrimientoUnBitIzquierda();
+
+    /*Operadores logicos*/
     bool operator <(Fp &b);
     bool operator >(Fp &b);
     bool operator <(uInt64 b);
     bool operator >(uInt64 b);
     bool operator ==(Fp &b);
     bool operator ==(uInt64 n);
-    Fp &operator ~();
 
+    /*Operadores de posicionamiento*/
     uInt64 &operator [](int i);
-    int bitAt(int i);
+    int bitEnPosicion(int i);
 
     void imprime();
 };
