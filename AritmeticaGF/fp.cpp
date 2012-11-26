@@ -1,9 +1,13 @@
 #include "fp.h"
 
-Fp Fp::primo,Fp::auxiliar;
+Fp Fp::primo;
 int Fp::k = 0;
+uInt64* Fp::aEn32Bits;
+uInt64* Fp::bEn32Bits;
+uInt64* Fp::rEn32Bits;
 
-Fp::Fp(){    
+
+Fp::Fp(){
     misPalabras = (uInt64*) malloc(sizeof(uInt64) * 2 * k );
 
     for(int i = 0; i < 2*k ;i++)
@@ -12,8 +16,8 @@ Fp::Fp(){
     this->esNeg = false;
 }
 
-Fp::Fp(std::string numeroEnHex){
-    misPalabras = (uInt64*) malloc(sizeof(uInt64) * 2 * k );
+Fp::Fp(std::string numeroEnHex){    
+    misPalabras = (uInt64*) malloc(sizeof(uInt64) * 2 * k );   
 
     this->parseNumber(numeroEnHex);
 
@@ -48,7 +52,7 @@ void Fp::aleatorizaNumero(){
 void Fp::copia(Fp &otroNumero){
     this->limpia();
 
-    for(int i = 0 ; i < otroNumero.longitudEnPalabras();i++)
+    for(int i = 0 ; i < 2*k;i++)
         (*this)[i] = otroNumero[i];
 }
 
@@ -180,16 +184,17 @@ void Fp::setP(std::string &primoCadena){
     }
     Fp::primo.copia(palabras,primoLen);
 
-    auxiliar.copia(palabras,primoLen);
-
     Fp::k = primoLen;
+    Fp::aEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 4 * k );
+    Fp::bEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 4 * k );
+    Fp::rEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 4 * k );
 }
 
 Fp &Fp::getP(){
     return Fp::primo;
 }
 
-void Fp::suma(Fp &a, Fp &b, Fp &resultado){
+void Fp::suma(Fp &a, Fp &b, Fp &resultado,bool reducirAlFinalizar ){
     int i,c;
     uInt64 s,aux;
 
@@ -200,14 +205,14 @@ void Fp::suma(Fp &a, Fp &b, Fp &resultado){
         resultado[i] = s;
     }
 
-    if(resultado > Fp::primo){
+    if(resultado > Fp::primo && reducirAlFinalizar){
         Fp::resta(resultado,Fp::primo,resultado);
-    }else if(resultado == Fp::primo){
+    }else if(resultado == Fp::primo && reducirAlFinalizar){
         resultado.limpia();
     }
 }
 
-void Fp::suma(Fp &a, uInt64 b, Fp &resultado){
+void Fp::suma(Fp &a, uInt64 b, Fp &resultado,bool reducirAlFinalizar ){
     int i,c;
     uInt64 s,aux;
 
@@ -225,9 +230,9 @@ void Fp::suma(Fp &a, uInt64 b, Fp &resultado){
         resultado[i] = s;
     }
 
-    if(resultado > Fp::primo){
+    if(resultado > Fp::primo && reducirAlFinalizar){
         Fp::resta(resultado,Fp::primo,resultado);
-    }else if(resultado == Fp::primo){
+    }else if(resultado == Fp::primo && reducirAlFinalizar){
         resultado.limpia();
     }
 }
@@ -288,13 +293,43 @@ void Fp::multiplicacionBinariaIzquierdaADerecha(Fp &a, Fp &b, Fp &resultado){
     }
 
     resultado.copia(a);
-
     for(int i = b.longitudEnBits()-2 ; i >= 0;i--){
         resultado.corrimientoUnBitIzquierda();
-        if(b.bitEnPosicion(i) == 1)
-            Fp::suma(resultado,a,resultado);
+        if(b.bitEnPosicion(i) == 1){
+            Fp::suma(resultado,a,resultado,false);
+        }
+    }
+}
+
+void Fp::multiplicacionClasica(Fp &a, Fp &b, Fp &resultado){
+    int i,j;
+    uInt64 carrySum,carry;
+
+    for(i = 0,j = 0; i < 2*k ; i++,j+=2){
+        aEn32Bits[j] = a[i]&0x00000000ffffffff;
+        aEn32Bits[j+1] = a[i]>>32;
+
+        bEn32Bits[j] = b[i]&0x00000000ffffffff;
+        bEn32Bits[j+1] = b[i]>>32;
+
+        rEn32Bits[j] = rEn32Bits[j+1] = 0;
     }
 
+    for(i = 0 ; i < 2*k;i++){
+        carry = 0;
+        for(j = 0 ; j < 2*k;j++){
+            carrySum = rEn32Bits[i+j] + aEn32Bits[j]*bEn32Bits[i] + carry;
+
+            rEn32Bits[i+j] = carrySum&0x00000000ffffffff;
+            carry = carrySum>>32;
+        }
+        rEn32Bits[i+j] = carry;
+    }
+
+    for(i = 0; i < 2*k ; i++){
+        resultado[i] = rEn32Bits[2*i];
+        resultado[i] |= rEn32Bits[2*i+1]<<32;
+    }
 }
 
 bool Fp::operator ==(Fp &b){
@@ -323,12 +358,10 @@ void Fp::operadorTilde(){
 }
 
 void Fp::corrimientoUnBitDerecha(){
-    int l,i;
+    int i;
     uInt64 acarreoActual,acarreoAnterior;
 
-    l = this->longitudEnPalabras();
-
-    for(i = l-1,acarreoAnterior = 0 ; i >= 0;i--){
+    for(i = 2*k-1,acarreoAnterior = 0 ; i >= 0;i--){
         acarreoActual = (*this)[i]&0x1;
         (*this)[i] = ( (*this)[i]>>1) | acarreoAnterior;
         acarreoAnterior = acarreoActual<< 63;
@@ -336,12 +369,10 @@ void Fp::corrimientoUnBitDerecha(){
 }
 
 void Fp::corrimientoUnBitIzquierda(){
-    int l,i;
+    int i;
     uInt64 acarreoActual,acarreoAnterior;
 
-    l = this->longitudEnPalabras();
-
-    for(i = 0,acarreoAnterior = 0 ; i < l ;i++){
+    for(i = 0,acarreoAnterior = 0 ; i < 2*k ;i++){
         acarreoActual = (*this)[i] >> 63;
         (*this)[i] = ( (*this)[i]<<1) | acarreoAnterior;
         acarreoAnterior = acarreoActual;

@@ -19,7 +19,12 @@ typedef unsigned long long int uInt64;
 class Fp{
 private:
     /*Primo que define el campo y variable auxiliar*/
-    static Fp primo,auxiliar;
+    static Fp primo;
+    /*Arreglos auxiliares para la multiplicacion clasica*/
+    static uInt64* aEn32Bits;
+    static uInt64* bEn32Bits;
+    static uInt64* rEn32Bits;
+
     /*Longitud en palabras del primo*/
     static int k;
     /*Numero maximo de digitos hexadecimales en una palabra*/
@@ -28,7 +33,7 @@ private:
     static const uInt64 maximoValorDePalabra = 0xffffffffffffffff;
 
     bool esNeg;
-    uInt64* misPalabras;
+    uInt64* misPalabras;    
 
     void iniciarSemillaAleatoria();
 
@@ -59,15 +64,15 @@ public:
     bool esPar() const;
 
     /*Operadores aritmeticos*/
-    static void suma(Fp &a, Fp &b, Fp &resultado);
-    static void suma(Fp &a, uInt64 b, Fp &resultado);
+    static void suma(Fp &a, Fp &b, Fp &resultado,bool reducirAlFinalizar = true);
+    static void suma(Fp &a, uInt64 b, Fp &resultado,bool reducirAlFinalizar = true);
 
     static void resta(Fp &a, Fp &b, Fp &resultado,bool permitirResultadosNegativos = false);
     static void resta(Fp &a, uInt64 b, Fp &resultado,bool permitirResultadosNegativos = false);
 
     static void multiplicacionBinariaIzquierdaADerecha(Fp &a, Fp &b, Fp &resultado);
-    /*TODO*/
     static void multiplicacionClasica(Fp &a, Fp &b, Fp &resultado);
+    /*TODO*/
     static void multiplicacionMontgomery(Fp &a, Fp &b, Fp &resultado);
 
     static void exponenciacionBinariaIzquierdaADerecha(Fp &b, Fp &e, Fp &resultado);

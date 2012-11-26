@@ -22,13 +22,16 @@ int main(){
     Fp z;
 
     Fp::getP().imprime();
+    printf("x");
     x.imprime();
+    printf("y");
     y.imprime();
 
-    Fp::suma(x,y,z);
+    Fp::multiplicacionBinariaIzquierdaADerecha(x,y,z);
     z.imprime();
 
-    Fp::resta(y,x,z,true);
+    printf("\n");
+    Fp::multiplicacionClasica(x,y,z);
     z.imprime();
 
     return 0;
