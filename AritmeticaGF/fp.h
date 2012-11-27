@@ -20,6 +20,10 @@ class Fp{
 private:
     /*Primo que define el campo y variable auxiliar*/
     static Fp primo;
+    /*Auxiliares en los metodos de reduccion*/
+    static Fp R0;
+    static Fp R1;
+
     /*Arreglos auxiliares para la multiplicacion clasica*/
     static uInt64* aEn32Bits;
     static uInt64* bEn32Bits;
@@ -81,10 +85,10 @@ public:
     static void exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado);
     static void exponenciacionVentanasDeslizantes(Fp &b, Fp &e, Fp &resultado);
 
-    void reduccionBarret();
-    void reduccionConRestauracion();
-    void reduccionSinRestauracion();
+    static void reduccionBarret(Fp &t);
     /*TODO end*/
+    static void reduccionConRestauracion(Fp &t);
+    static void reduccionSinRestauracion(Fp &t);
 
     /*Operadores a nivel bits*/
     void operadorTilde();

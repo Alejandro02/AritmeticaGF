@@ -30,8 +30,7 @@ int main(){
     Fp::multiplicacionBinariaIzquierdaADerecha(x,y,z);
     z.imprime();
 
-    printf("\n");
-    Fp::multiplicacionClasica(x,y,z);
+    Fp::reduccionSinRestauracion(z);
     z.imprime();
 
     return 0;

@@ -1,11 +1,12 @@
 #include "fp.h"
 
 Fp Fp::primo;
+Fp Fp::R0;
+Fp Fp::R1;
 int Fp::k = 0;
 uInt64* Fp::aEn32Bits;
 uInt64* Fp::bEn32Bits;
 uInt64* Fp::rEn32Bits;
-
 
 Fp::Fp(){
     misPalabras = (uInt64*) malloc(sizeof(uInt64) * 2 * k );
@@ -54,6 +55,8 @@ void Fp::copia(Fp &otroNumero){
 
     for(int i = 0 ; i < 2*k;i++)
         (*this)[i] = otroNumero[i];
+
+    this->setNegativo(otroNumero.esNegativo());
 }
 
 void Fp::copia(uInt64 *unVector,int longitud){
@@ -72,16 +75,22 @@ void Fp::setNegativo(bool negativo){
 
 int Fp::longitudEnPalabras(){
     int i;
-    for(i = 0; (*this)[i] != 0 && i < 2*k ;i++);
 
-    return i;
+    for(i = 2*k-1; i >= 0 ;i--)
+        if((*this)[i] != 0)
+            break;
+
+    return i+1;
 }
 
 int Fp::longitudEnBits(){
     int i,palabrasLlenas,bitsEnUltimaPalabra;
     uInt64 aux;
 
-    for(i = 0; (*this)[i] != 0 && i < 2*k ;i++);
+    for(i = 2*k-1; i >= 0 ;i--)
+        if((*this)[i] != 0)
+            break;
+    i++;
 
     palabrasLlenas =  (i - 1)*sizeof(uInt64)*8;
 
@@ -182,7 +191,10 @@ void Fp::setP(std::string &primoCadena){
         fromStringTo<uInt64>(aux,primoCadena.substr(0,i),std::hex);
         palabras[j] = aux;
     }
+
     Fp::primo.copia(palabras,primoLen);
+    Fp::R0.copia(palabras,primoLen);
+    Fp::R1.copia(palabras,primoLen);
 
     Fp::k = primoLen;
     Fp::aEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 4 * k );
@@ -256,7 +268,8 @@ void Fp::resta(Fp &a, Fp &b, Fp &resultado,bool permitirResultadosNegativos ){
         }else{
             resultado.setNegativo(true);
         }
-    }
+    }else
+        resultado.setNegativo(false);
 }
 
 void Fp::resta(Fp &a, uInt64 b, Fp &resultado,bool permitirResultadosNegativos){
@@ -283,7 +296,8 @@ void Fp::resta(Fp &a, uInt64 b, Fp &resultado,bool permitirResultadosNegativos){
         }else{
             resultado.setNegativo(true);
         }
-    }
+    }else
+        resultado.setNegativo(false);
 }
 
 void Fp::multiplicacionBinariaIzquierdaADerecha(Fp &a, Fp &b, Fp &resultado){
@@ -330,6 +344,52 @@ void Fp::multiplicacionClasica(Fp &a, Fp &b, Fp &resultado){
         resultado[i] = rEn32Bits[2*i];
         resultado[i] |= rEn32Bits[2*i+1]<<32;
     }
+}
+
+void Fp::reduccionConRestauracion(Fp &t){
+    int kPrima = 0;
+    R0.copia(t);
+
+    while(primo < R0){
+        primo.corrimientoUnBitIzquierda();
+        kPrima++;
+    }
+    primo.corrimientoUnBitDerecha();
+
+    for(int i = 0 ; i < kPrima ;i++){
+        Fp::resta(R0,primo,R1,true);
+        if(R1.esNegativo())
+            R1.copia(R0);
+        if(i != kPrima-1)
+            primo.corrimientoUnBitDerecha();
+        R0.copia(R1);
+    }
+
+    t.copia(R0);
+}
+
+void Fp::reduccionSinRestauracion(Fp &t){
+    int kPrima = 0;
+    R0.copia(t);
+
+    while(primo < R0){
+        primo.corrimientoUnBitIzquierda();
+        kPrima++;
+    }
+    primo.corrimientoUnBitDerecha();
+
+    for(int i = 0 ; i < kPrima ;i++){
+        if(R0.esNegativo())
+            Fp::resta(primo,R0,R1,true);
+        else
+            Fp::resta(R0,primo,R1,true);
+
+        if(i != kPrima-1)
+            primo.corrimientoUnBitDerecha();
+        R0.copia(R1);
+    }
+
+    t.copia(R0);
 }
 
 bool Fp::operator ==(Fp &b){
@@ -440,3 +500,5 @@ int Fp::bitEnPosicion(int i){
 
     return bit;
 }
+
+
