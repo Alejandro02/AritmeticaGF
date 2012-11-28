@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string>
-
+#include <vector>
 /*Traduce una cadena a entero*/
 template <class T>bool fromStringTo(T& t,const std::string& s,std::ios_base& (*f)(std::ios_base&)){
     std::istringstream iss(s);
@@ -18,9 +18,15 @@ typedef unsigned long long int uInt64;
 
 class Fp{
 private:
-    /*Primo que define el campo y variable auxiliar*/
+    /*Primo que define el campo */
     static Fp primo;
-    /*Auxiliares en los metodos de reduccion*/
+
+    /*Para la reduccion Barret*/
+    static Fp mu;
+    static Fp b;
+    static Fp q;
+
+    /*Auxiliares*/
     static Fp R0;
     static Fp R1;
 
@@ -31,8 +37,12 @@ private:
 
     /*Longitud en palabras del primo*/
     static int k;
+    /*Longitud de los */
+    static int kLim;
+
     /*Numero maximo de digitos hexadecimales en una palabra*/
     static const short maxN = 16;
+
     /*Descriptivo por si mismo*/
     static const uInt64 maximoValorDePalabra = 0xffffffffffffffff;
 
@@ -41,8 +51,13 @@ private:
 
     void iniciarSemillaAleatoria();
 
+    /*Necesarias para la reduccion de Barret*/
+    /*No deseo que se usen fuera de la clase*/
+    static void calculaMu();
+    std::vector<Fp> &operator /(Fp &b);
+    Fp &operator >>(uInt64 b);
 public:
-    static void setP(std::string &primo);
+    static void setP(std::string &primo,bool usarBarret = false);
     static Fp &getP();
 
     Fp();
@@ -64,7 +79,7 @@ public:
 
     bool esNegativo() const;
     bool esPositivo() const;
-    bool esImpar() const;
+    bool esImpar() ;
     bool esPar() const;
 
     /*Operadores aritmeticos*/

@@ -1,24 +1,28 @@
 #include "fp.h"
 
 Fp Fp::primo;
+Fp Fp::mu;
+Fp Fp::b;
+Fp Fp::q;
 Fp Fp::R0;
 Fp Fp::R1;
 int Fp::k = 0;
+int Fp::kLim = 0;
 uInt64* Fp::aEn32Bits;
 uInt64* Fp::bEn32Bits;
 uInt64* Fp::rEn32Bits;
 
 Fp::Fp(){
-    misPalabras = (uInt64*) malloc(sizeof(uInt64) * 2 * k );
+    misPalabras = (uInt64*) malloc(sizeof(uInt64) * kLim );
 
-    for(int i = 0; i < 2*k ;i++)
+    for(int i = 0; i < kLim ;i++)
         misPalabras[i] = 0;
 
     this->esNeg = false;
 }
 
 Fp::Fp(std::string numeroEnHex){    
-    misPalabras = (uInt64*) malloc(sizeof(uInt64) * 2 * k );   
+    misPalabras = (uInt64*) malloc(sizeof(uInt64) * kLim );
 
     this->parseNumber(numeroEnHex);
 
@@ -53,7 +57,7 @@ void Fp::aleatorizaNumero(){
 void Fp::copia(Fp &otroNumero){
     this->limpia();
 
-    for(int i = 0 ; i < 2*k;i++)
+    for(int i = 0 ; i < kLim;i++)
         (*this)[i] = otroNumero[i];
 
     this->setNegativo(otroNumero.esNegativo());
@@ -61,11 +65,11 @@ void Fp::copia(Fp &otroNumero){
 
 void Fp::copia(uInt64 *unVector,int longitud){
     misPalabras = NULL;
-    misPalabras = (uInt64*) malloc(sizeof(uInt64) *  longitud * 2 );
+    misPalabras = (uInt64*) malloc(sizeof(uInt64) *  longitud * 3  );
 
     for(int i = 0 ; i < longitud;i++){
         (*this)[i] = unVector[i];
-        (*this)[i+longitud] = 0;
+        (*this)[i+longitud] = (*this)[i+2*longitud] = 0;
     }
 }
 
@@ -76,7 +80,7 @@ void Fp::setNegativo(bool negativo){
 int Fp::longitudEnPalabras(){
     int i;
 
-    for(i = 2*k-1; i >= 0 ;i--)
+    for(i = kLim-1; i >= 0 ;i--)
         if((*this)[i] != 0)
             break;
 
@@ -87,7 +91,7 @@ int Fp::longitudEnBits(){
     int i,palabrasLlenas,bitsEnUltimaPalabra;
     uInt64 aux;
 
-    for(i = 2*k-1; i >= 0 ;i--)
+    for(i = kLim-1; i >= 0 ;i--)
         if((*this)[i] != 0)
             break;
     i++;
@@ -107,8 +111,12 @@ bool Fp::esPositivo() const{
     return !this->esNeg;
 }
 
+bool Fp::esImpar(){
+    return ((*this)[0]&0x1) == 1 ? true : false;
+}
+
 void Fp::limpia(){
-    for(int i = 0; i < 2*k ;i++)
+    for(int i = 0; i < kLim ;i++)
         (*this)[i] = 0;
 }
 
@@ -132,7 +140,7 @@ void Fp::parseNumber(std::string numeroEnHex){
 void Fp::insertaFinal(uInt64 palabra){
     int final;
     final = this->longitudEnPalabras();
-    if(final < 2*k)
+    if(final < kLim)
         (*this)[final] = palabra;
 }
 
@@ -172,7 +180,61 @@ void Fp::iniciarSemillaAleatoria(){
     srand((unsigned int) seconds);
 }
 
-void Fp::setP(std::string &primoCadena){
+void Fp::calculaMu(){
+    Fp::b.limpia();
+    Fp::mu.limpia();
+
+    //b es 2 a la 64
+    Fp::b[0] = 1;
+    for(int j = 0 ; j < 2*k;j++){
+        for(int i = kLim-1 ; i > 0;i--)
+            Fp::b[i] = Fp::b[i-1];
+        Fp::b[0] = 0;
+    }
+
+    R1.copia(Fp::primo);
+
+    mu = (b/R1).at(0);
+
+    printf("El mu");
+    mu.imprime();
+}
+
+std::vector<Fp> &Fp::operator /(Fp &b){
+    std::vector<Fp> *QR= new std::vector<Fp>();
+    Fp q,r;
+
+    if(*this == 0){
+        QR->push_back(q);
+        QR->push_back(r);
+        return *(QR);
+    }
+    *QR = (*this>>1)/b;
+
+    q = QR->at(0);
+    r = QR->at(1);
+    q.corrimientoUnBitIzquierda();
+    r.corrimientoUnBitIzquierda();
+
+
+    if(this->esImpar()){
+        Fp::suma(r,1,r,false);
+    }
+
+    if( r > b || r == b){
+        Fp::resta(r,b,R0);
+        r.copia(R0);
+        Fp::suma(q,1,q,false);
+    }
+
+    QR->clear();
+    QR->push_back(q);
+    QR->push_back(r);
+
+    return *(QR);
+}
+
+void Fp::setP(std::string &primoCadena,bool usarBarret){
     uInt64 *palabras,aux;
     int i,j,primoLen = (primoCadena.size()*4)/64;
 
@@ -191,15 +253,24 @@ void Fp::setP(std::string &primoCadena){
         fromStringTo<uInt64>(aux,primoCadena.substr(0,i),std::hex);
         palabras[j] = aux;
     }
-
-    Fp::primo.copia(palabras,primoLen);
-    Fp::R0.copia(palabras,primoLen);
-    Fp::R1.copia(palabras,primoLen);
-
     Fp::k = primoLen;
+    Fp::kLim = 3*k;
+
+    /*Inicializacion de los objetos*/
+    Fp::primo.copia(palabras,k);
+    Fp::R0.copia(palabras,k);
+    Fp::R1.copia(palabras,k);
+
     Fp::aEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 4 * k );
     Fp::bEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 4 * k );
     Fp::rEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 4 * k );
+
+    if(usarBarret){
+        Fp::b.copia(palabras,k);
+        Fp::q.copia(palabras,k);
+        Fp::mu.copia(palabras,k);
+        calculaMu();
+    }
 }
 
 Fp &Fp::getP(){
@@ -210,7 +281,7 @@ void Fp::suma(Fp &a, Fp &b, Fp &resultado,bool reducirAlFinalizar ){
     int i,c;
     uInt64 s,aux;
 
-    for(i = 0,c = 0; i < 2*k;i++){
+    for(i = 0,c = 0; i < kLim;i++){
         s = a[i] + b[i] + c;
         aux = maximoValorDePalabra - (b[i] + c);
         c = ( a[i] > aux) ? 1 : 0;
@@ -218,7 +289,8 @@ void Fp::suma(Fp &a, Fp &b, Fp &resultado,bool reducirAlFinalizar ){
     }
 
     if(resultado > Fp::primo && reducirAlFinalizar){
-        Fp::resta(resultado,Fp::primo,resultado);
+        Fp::resta(resultado,Fp::primo,R0);
+        resultado.copia(R0);
     }else if(resultado == Fp::primo && reducirAlFinalizar){
         resultado.limpia();
     }
@@ -234,7 +306,7 @@ void Fp::suma(Fp &a, uInt64 b, Fp &resultado,bool reducirAlFinalizar ){
 
     resultado[0] = s;
 
-    for(i = 1; i < 2*k;i++){
+    for(i = 1; i < kLim;i++){
         s = a[i]  + c;
         aux = maximoValorDePalabra - c;
         c = ( a[i] > aux) ? 1 : 0;
@@ -243,7 +315,8 @@ void Fp::suma(Fp &a, uInt64 b, Fp &resultado,bool reducirAlFinalizar ){
     }
 
     if(resultado > Fp::primo && reducirAlFinalizar){
-        Fp::resta(resultado,Fp::primo,resultado);
+        Fp::resta(resultado,Fp::primo,R0);
+        resultado.copia(R0);
     }else if(resultado == Fp::primo && reducirAlFinalizar){
         resultado.limpia();
     }
@@ -253,7 +326,7 @@ void Fp::resta(Fp &a, Fp &b, Fp &resultado,bool permitirResultadosNegativos ){
     int i,c;
     uInt64 s;
 
-    for(c = 0, i = 0; i < 2*k ;i++){
+    for(c = 0, i = 0; i < kLim ;i++){
         s = a[i] - (b[i] + c);
         c = ( (b[i] + c ) > a[i] ) ? 1 : 0;
         resultado[i] = s;
@@ -264,12 +337,14 @@ void Fp::resta(Fp &a, Fp &b, Fp &resultado,bool permitirResultadosNegativos ){
         Fp::suma(resultado,1,resultado);
 
         if(!permitirResultadosNegativos){
-            Fp::resta(Fp::primo,resultado,resultado);
+            Fp::resta(Fp::primo,resultado,R0);
+            resultado.copia(R0);
         }else{
             resultado.setNegativo(true);
         }
     }else
         resultado.setNegativo(false);
+
 }
 
 void Fp::resta(Fp &a, uInt64 b, Fp &resultado,bool permitirResultadosNegativos){
@@ -281,7 +356,7 @@ void Fp::resta(Fp &a, uInt64 b, Fp &resultado,bool permitirResultadosNegativos){
 
     resultado[0] = s;
 
-    for(i = 1; i < 2*k ;i++){
+    for(i = 1; i < kLim ;i++){
         s = a[i] - c;
         c = ( c  > a[i] ) ? 1 : 0;
         resultado[i] = s;
@@ -292,7 +367,8 @@ void Fp::resta(Fp &a, uInt64 b, Fp &resultado,bool permitirResultadosNegativos){
         Fp::suma(resultado,1,resultado);
 
         if(!permitirResultadosNegativos){
-            Fp::resta(Fp::primo,resultado,resultado);
+            Fp::resta(Fp::primo,resultado,R0);
+            resultado.copia(R0);
         }else{
             resultado.setNegativo(true);
         }
@@ -393,7 +469,7 @@ void Fp::reduccionSinRestauracion(Fp &t){
 }
 
 bool Fp::operator ==(Fp &b){
-    for(int i = 0 ; i < 2*k;i++)
+    for(int i = 0 ; i < kLim;i++)
         if((*this)[i] != b[i])
             return false;
 
@@ -404,15 +480,29 @@ bool Fp::operator ==(uInt64 n){
     if((*this)[0] != n)
         return false;
 
-    for(int i = 1 ; i < 2*k;i++)
+    for(int i = 1 ; i < kLim;i++)
         if((*this)[i] != 0)
             return false;
 
     return true;
 }
 
+Fp &Fp::operator >>(uInt64 b){
+    Fp corrido;
+    int i;
+
+    uInt64 acarreoActual,acarreoAnterior;
+    for(i = kLim-1,acarreoAnterior = 0 ; i >= 0;i--){
+        acarreoActual = (*this)[i]&0x1;
+        corrido[i] = ( (*this)[i]>>1) | acarreoAnterior;
+        acarreoAnterior = acarreoActual<< 63;
+    }
+
+    return corrido;
+}
+
 void Fp::operadorTilde(){
-    for(int i = 0 ; i < 2*k;i++)
+    for(int i = 0 ; i < kLim;i++)
         (*this)[i] = ~(*this)[i];
 
 }
@@ -421,7 +511,7 @@ void Fp::corrimientoUnBitDerecha(){
     int i;
     uInt64 acarreoActual,acarreoAnterior;
 
-    for(i = 2*k-1,acarreoAnterior = 0 ; i >= 0;i--){
+    for(i = kLim-1,acarreoAnterior = 0 ; i >= 0;i--){
         acarreoActual = (*this)[i]&0x1;
         (*this)[i] = ( (*this)[i]>>1) | acarreoAnterior;
         acarreoAnterior = acarreoActual<< 63;
@@ -432,7 +522,7 @@ void Fp::corrimientoUnBitIzquierda(){
     int i;
     uInt64 acarreoActual,acarreoAnterior;
 
-    for(i = 0,acarreoAnterior = 0 ; i < 2*k ;i++){
+    for(i = 0,acarreoAnterior = 0 ; i < kLim ;i++){
         acarreoActual = (*this)[i] >> 63;
         (*this)[i] = ( (*this)[i]<<1) | acarreoAnterior;
         acarreoAnterior = acarreoActual;
@@ -440,7 +530,7 @@ void Fp::corrimientoUnBitIzquierda(){
 }
 
 bool Fp::operator >(Fp &b){
-    for(int i = 2*k-1; i>= 0;i--)
+    for(int i = kLim-1; i>= 0;i--)
         if((*this)[i] < b[i])
             return false;
         else if((*this)[i] > b[i])
@@ -471,12 +561,11 @@ bool Fp::operator >(uInt64 b){
 }
 
 bool Fp::operator <(Fp &b){
-    for(int i = 2*k-1; i>= 0;i--)
+    for(int i = kLim-1; i>= 0;i--)
         if((*this)[i] < b[i])
             return true;
         else if((*this)[i] > b[i])
-            return false;
-
+            return false;        
     return false;
 }
 
