@@ -8,6 +8,7 @@
 #include <time.h>
 #include <string>
 #include <vector>
+
 /*Traduce una cadena a entero*/
 template <class T>bool fromStringTo(T& t,const std::string& s,std::ios_base& (*f)(std::ios_base&)){
     std::istringstream iss(s);
@@ -25,8 +26,10 @@ private:
     static Fp mu;
     static Fp b;
     static Fp q;
+    static Fp residuo1;
+    static Fp residuo2;
 
-    /*Auxiliares*/
+    /*Auxiliares en reducciones.R0 no debe usarse como resultado en la resta. En su lugar usar R1*/
     static Fp R0;
     static Fp R1;
 
@@ -49,13 +52,15 @@ private:
     bool esNeg;
     uInt64* misPalabras;    
 
-    void iniciarSemillaAleatoria();
-
     /*Necesarias para la reduccion de Barret*/
     /*No deseo que se usen fuera de la clase*/
     static void calculaMu();
     std::vector<Fp> &operator /(Fp &b);
-    Fp &operator >>(uInt64 b);
+    Fp &corrimientoUnBitDerechaConCopia();
+
+    /*Reserva memoria y le asigna el vector al objeto que lo llama*/
+    void creaYCopia(uInt64 *unVector,int longitud);
+
 public:
     static void setP(std::string &primo,bool usarBarret = false);
     static Fp &getP();
@@ -64,9 +69,8 @@ public:
     Fp(std::string numeroEnHex);
 
     void aleatorizaNumero();
-
     void copia(Fp &otroNumero);
-    void copia(uInt64 *unVector,int longitud);
+
     void setNegativo(bool negativo);
     void parseNumber(std::string numeroEnHex);
 
@@ -89,19 +93,19 @@ public:
     static void resta(Fp &a, Fp &b, Fp &resultado,bool permitirResultadosNegativos = false);
     static void resta(Fp &a, uInt64 b, Fp &resultado,bool permitirResultadosNegativos = false);
 
-    static void multiplicacionBinariaIzquierdaADerecha(Fp &a, Fp &b, Fp &resultado);
-    static void multiplicacionClasica(Fp &a, Fp &b, Fp &resultado);
+    static void multiplicacionBinariaIzquierdaADerecha(Fp &a, Fp &b, Fp &resultado,bool reducirAlFinalizar = false);
+    static void multiplicacionClasica(Fp &a, Fp &b, Fp &resultado,bool reducirAlFinalizar = false);
     /*TODO*/
     static void multiplicacionMontgomery(Fp &a, Fp &b, Fp &resultado);
-
+    /*TODO end*/
     static void exponenciacionBinariaIzquierdaADerecha(Fp &b, Fp &e, Fp &resultado);
     static void exponenciacionBinariaDerechaAIzquierda(Fp &b, Fp &e, Fp &resultado);
     static void exponenciacionBinariaSideChannels(Fp &b, Fp &e, Fp &resultado);
+    /*TODO*/
     static void exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado);
     static void exponenciacionVentanasDeslizantes(Fp &b, Fp &e, Fp &resultado);
-
-    static void reduccionBarret(Fp &t);
     /*TODO end*/
+    static void reduccionBarret(Fp &t);    
     static void reduccionConRestauracion(Fp &t);
     static void reduccionSinRestauracion(Fp &t);
 

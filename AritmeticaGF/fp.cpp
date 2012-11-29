@@ -4,6 +4,8 @@ Fp Fp::primo;
 Fp Fp::mu;
 Fp Fp::b;
 Fp Fp::q;
+Fp Fp::residuo1;
+Fp Fp::residuo2;
 Fp Fp::R0;
 Fp Fp::R1;
 int Fp::k = 0;
@@ -29,8 +31,7 @@ Fp::Fp(std::string numeroEnHex){
     this->esNeg = false;
 }
 
-void Fp::aleatorizaNumero(){
-    this->iniciarSemillaAleatoria();
+void Fp::aleatorizaNumero(){    
     short aux;
 
     for(int i = 0; i < k ;i++){
@@ -63,7 +64,7 @@ void Fp::copia(Fp &otroNumero){
     this->setNegativo(otroNumero.esNegativo());
 }
 
-void Fp::copia(uInt64 *unVector,int longitud){
+void Fp::creaYCopia(uInt64 *unVector,int longitud){
     misPalabras = NULL;
     misPalabras = (uInt64*) malloc(sizeof(uInt64) *  longitud * 3  );
 
@@ -157,6 +158,7 @@ void Fp::imprime(){
 
     if(this->longitudEnPalabras() == 0){
         printf("0");
+        printf("\n");
         return;
     }
 
@@ -172,12 +174,6 @@ void Fp::imprime(){
 
     }
     printf("\n");
-}
-
-void Fp::iniciarSemillaAleatoria(){
-    time_t seconds;
-    time(&seconds);
-    srand((unsigned int) seconds);
 }
 
 void Fp::calculaMu(){
@@ -196,8 +192,13 @@ void Fp::calculaMu(){
 
     mu = (b/R1).at(0);
 
-    printf("El mu");
-    mu.imprime();
+    Fp::b.limpia();
+    Fp::b[0] = 1;
+    for(int j = 0 ; j < k+1;j++){
+        for(int i = kLim-1 ; i > 0;i--)
+            Fp::b[i] = Fp::b[i-1];
+        Fp::b[0] = 0;
+    }
 }
 
 std::vector<Fp> &Fp::operator /(Fp &b){
@@ -209,7 +210,7 @@ std::vector<Fp> &Fp::operator /(Fp &b){
         QR->push_back(r);
         return *(QR);
     }
-    *QR = (*this>>1)/b;
+    *QR = this->corrimientoUnBitDerechaConCopia()/b;
 
     q = QR->at(0);
     r = QR->at(1);
@@ -236,7 +237,7 @@ std::vector<Fp> &Fp::operator /(Fp &b){
 
 void Fp::setP(std::string &primoCadena,bool usarBarret){
     uInt64 *palabras,aux;
-    int i,j,primoLen = (primoCadena.size()*4)/64;
+    int i,j,primoLen = (primoCadena.size()*4)/64;    
 
     primoLen = (primoCadena.size()*4)%64 != 0 ? primoLen + 1 : primoLen;
 
@@ -257,20 +258,26 @@ void Fp::setP(std::string &primoCadena,bool usarBarret){
     Fp::kLim = 3*k;
 
     /*Inicializacion de los objetos*/
-    Fp::primo.copia(palabras,k);
-    Fp::R0.copia(palabras,k);
-    Fp::R1.copia(palabras,k);
+    Fp::primo.creaYCopia(palabras,k);
+    Fp::R0.creaYCopia(palabras,k);
+    Fp::R1.creaYCopia(palabras,k);
 
-    Fp::aEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 4 * k );
-    Fp::bEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 4 * k );
-    Fp::rEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 4 * k );
+    Fp::aEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 6 * k );
+    Fp::bEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 6 * k );
+    Fp::rEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 6 * k );
 
     if(usarBarret){
-        Fp::b.copia(palabras,k);
-        Fp::q.copia(palabras,k);
-        Fp::mu.copia(palabras,k);
+        Fp::b.creaYCopia(palabras,k);
+        Fp::q.creaYCopia(palabras,k);
+        Fp::residuo1.creaYCopia(palabras,k);
+        Fp::residuo2.creaYCopia(palabras,k);
+        Fp::mu.creaYCopia(palabras,k);
         calculaMu();
     }
+
+    time_t seconds;
+    time(&seconds);
+    srand((unsigned int) seconds);
 }
 
 Fp &Fp::getP(){
@@ -376,8 +383,8 @@ void Fp::resta(Fp &a, uInt64 b, Fp &resultado,bool permitirResultadosNegativos){
         resultado.setNegativo(false);
 }
 
-void Fp::multiplicacionBinariaIzquierdaADerecha(Fp &a, Fp &b, Fp &resultado){
-    if(b == 0){
+void Fp::multiplicacionBinariaIzquierdaADerecha(Fp &a, Fp &b, Fp &resultado, bool reducirAlFinalizar){
+    if(b == 0 || a == 0){
         resultado.limpia();
         return;
     }
@@ -389,13 +396,15 @@ void Fp::multiplicacionBinariaIzquierdaADerecha(Fp &a, Fp &b, Fp &resultado){
             Fp::suma(resultado,a,resultado,false);
         }
     }
+    if(reducirAlFinalizar)
+        Fp::reduccionBarret(resultado);
 }
 
-void Fp::multiplicacionClasica(Fp &a, Fp &b, Fp &resultado){
+void Fp::multiplicacionClasica(Fp &a, Fp &b, Fp &resultado, bool reducirAlFinalizar){
     int i,j;
     uInt64 carrySum,carry;
 
-    for(i = 0,j = 0; i < 2*k ; i++,j+=2){
+    for(i = 0,j = 0; i < kLim ; i++,j+=2){
         aEn32Bits[j] = a[i]&0x00000000ffffffff;
         aEn32Bits[j+1] = a[i]>>32;
 
@@ -405,9 +414,9 @@ void Fp::multiplicacionClasica(Fp &a, Fp &b, Fp &resultado){
         rEn32Bits[j] = rEn32Bits[j+1] = 0;
     }
 
-    for(i = 0 ; i < 2*k;i++){
+    for(i = 0 ; i < 3*k;i++){
         carry = 0;
-        for(j = 0 ; j < 2*k;j++){
+        for(j = 0 ; j < 3*k;j++){
             carrySum = rEn32Bits[i+j] + aEn32Bits[j]*bEn32Bits[i] + carry;
 
             rEn32Bits[i+j] = carrySum&0x00000000ffffffff;
@@ -416,10 +425,13 @@ void Fp::multiplicacionClasica(Fp &a, Fp &b, Fp &resultado){
         rEn32Bits[i+j] = carry;
     }
 
-    for(i = 0; i < 2*k ; i++){
+    for(i = 0; i < kLim ; i++){
         resultado[i] = rEn32Bits[2*i];
         resultado[i] |= rEn32Bits[2*i+1]<<32;
     }
+
+    if(reducirAlFinalizar)
+        Fp::reduccionBarret(resultado);
 }
 
 void Fp::reduccionConRestauracion(Fp &t){
@@ -465,7 +477,55 @@ void Fp::reduccionSinRestauracion(Fp &t){
         R0.copia(R1);
     }
 
+    if(R0.esNegativo()){
+        Fp::resta(primo,R0,R1,true);
+        R0.copia(R1);
+    }
+
     t.copia(R0);
+}
+
+void Fp::reduccionBarret(Fp &t){
+    R1.copia(t);
+    /*x/b^(k-1)*/
+    for(int i = 0 ; i < k-1;i++){
+        for(int j = 1 ; j < kLim-1;j++)
+            R1[j-1] = R1[j];
+        R1[kLim-1] = 0;
+    }
+
+    /*(x/b^(k-1))*mu*/
+    Fp::multiplicacionClasica(R1,mu,q);
+
+    /*(x/b^(k-1))*mu*(1/b^(k+1))*/
+    for(int i = 0 ; i < k+1;i++){
+        for(int j = 1 ; j < kLim-1;j++)
+            q[j-1] = q[j];
+        q[kLim-1] = 0;
+    }
+    residuo1.copia(t);
+
+    /*r1 = x mod b^(k+1)*/
+    for(int i = k+1;i < kLim;i++)
+        residuo1[i] = 0;
+
+    residuo2.limpia();
+    /*r2 = q*p mod b^(k+1)*/
+    Fp::multiplicacionClasica(primo,q,residuo2);
+
+    for(int i = k+1;i < kLim;i++)
+        residuo2[i] = 0;
+
+    Fp::resta(residuo1,residuo2,t,true);
+
+    if(t.esNegativo()){
+        /*Al finalizar el calculo de mu, deje a b como b^k+1*/
+        Fp::suma(b,t,t,false);
+    }
+
+    while(t > primo){
+        Fp::resta(t,primo,t);
+    }
 }
 
 bool Fp::operator ==(Fp &b){
@@ -487,18 +547,18 @@ bool Fp::operator ==(uInt64 n){
     return true;
 }
 
-Fp &Fp::operator >>(uInt64 b){
-    Fp corrido;
+Fp &Fp::corrimientoUnBitDerechaConCopia(){
+    Fp* corrido = new Fp();
     int i;
 
     uInt64 acarreoActual,acarreoAnterior;
     for(i = kLim-1,acarreoAnterior = 0 ; i >= 0;i--){
         acarreoActual = (*this)[i]&0x1;
-        corrido[i] = ( (*this)[i]>>1) | acarreoAnterior;
+        (*corrido)[i] = ( (*this)[i]>>1) | acarreoAnterior;
         acarreoAnterior = acarreoActual<< 63;
     }
 
-    return corrido;
+    return *corrido;
 }
 
 void Fp::operadorTilde(){
@@ -549,7 +609,7 @@ bool Fp::operator <(uInt64 b){
     return false;
 }
 
-bool Fp::operator >(uInt64 b){
+bool Fp::operator >(uInt64 b){    
     if((*this)[0] > b)
         return true;
 
@@ -589,5 +649,48 @@ int Fp::bitEnPosicion(int i){
 
     return bit;
 }
+
+void Fp::exponenciacionBinariaIzquierdaADerecha(Fp &b, Fp &e, Fp &resultado){
+    if(e == 0){
+        resultado.limpia();
+        resultado[1] = 1;
+        return;
+    }
+
+    resultado.copia(b);
+
+    for(int i = e.longitudEnBits()-2 ; i >= 0;i--){
+        Fp::multiplicacionClasica(resultado,resultado,resultado,true);
+        if(e.bitEnPosicion(i) == 1)
+            Fp::multiplicacionClasica(resultado,b,resultado,true);
+    }
+}
+
+void Fp::exponenciacionBinariaDerechaAIzquierda(Fp &b, Fp &e, Fp &resultado){
+    resultado.limpia();
+    resultado[1] = 1;
+
+    for(int i = 0 ; i < e.longitudEnBits() ;i++){
+        if(e.bitEnPosicion(i) == 1)
+            Fp::multiplicacionClasica(resultado,b,resultado,true);
+        Fp::multiplicacionClasica(b,b,b,true);
+    }
+
+}
+
+void Fp::exponenciacionBinariaSideChannels(Fp &b, Fp &e, Fp &resultado){
+    Fp c[2];
+
+    c[0][0] = 1;
+
+    for(int i = e.longitudEnBits()- 1 ; i >= 0;i--){
+        Fp::multiplicacionClasica(c[0],c[0],c[0],true);
+        Fp::multiplicacionClasica(c[0],b,c[1],true);
+        c[0].copia(c[e.bitEnPosicion(i)]);
+    }
+
+    resultado.copia(c[0]);
+}
+
 
 
