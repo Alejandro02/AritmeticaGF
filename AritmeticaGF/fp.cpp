@@ -6,6 +6,7 @@ Fp Fp::b;
 Fp Fp::q;
 Fp Fp::residuo1;
 Fp Fp::residuo2;
+Fp Fp::r;
 Fp Fp::R0;
 Fp Fp::R1;
 int Fp::k = 0;
@@ -73,6 +74,69 @@ void Fp::creaYCopia(uInt64 *unVector,int longitud){
         (*this)[i+longitud] = (*this)[i+2*longitud] = 0;
     }
 }
+
+std::vector<Fp> &Fp::EuclidesExtendido(Fp &a, Fp &b){
+    std::vector<Fp> *result = new std::vector<Fp>();
+    Fp x,y,q;
+
+    if(b == 0){
+        x[0] = 1;
+
+        result->push_back(x);
+        result->push_back(y);
+
+        return *(result);
+    }
+
+    //(X,Y,D)
+    *result = EuclidesExtendido(b,a%b);
+
+    q = (a/b).at(0);
+
+    //X' = Y
+    x.copia(result->at(1));
+    //Y' = X - (a/b)*Y
+    Fp::multiplicacionBinariaIzquierdaADerecha(q,result->at(1),R1);
+    Fp::resta(result->at(0),R1,y,true);
+
+    result->clear();
+
+    result->push_back(x);
+    result->push_back(y);
+
+    return *(result);
+}
+
+Fp &Fp::operator %(Fp &b){
+    Fp n;
+    Fp *r = new Fp();
+    int k,i;
+
+    residuo1.copia(*this);
+    residuo2.limpia();
+    n.copia(b);
+
+    k = 0;
+
+    while(n < residuo1){
+        n.corrimientoUnBitIzquierda();
+        k++;
+    }
+    n.corrimientoUnBitDerecha();
+
+    for(i = 0; i < k;i++){
+        Fp::resta(residuo1,n,residuo2,true);
+        if(residuo2.esNegativo())
+            residuo2.copia(residuo1);
+        n.corrimientoUnBitDerecha();
+        residuo1.copia(residuo2);
+    }
+
+    r->copia(residuo2);
+
+    return *r;
+}
+
 
 void Fp::setNegativo(bool negativo){
     this->esNeg = negativo;

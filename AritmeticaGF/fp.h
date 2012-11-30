@@ -29,6 +29,9 @@ private:
     static Fp residuo1;
     static Fp residuo2;
 
+    /*Para la multiplicacion Montgomery*/
+    static Fp r;
+
     /*Auxiliares en reducciones.R0 no debe usarse como resultado en la resta. En su lugar usar R1*/
     static Fp R0;
     static Fp R1;
@@ -52,11 +55,15 @@ private:
     bool esNeg;
     uInt64* misPalabras;    
 
-    /*Necesarias para la reduccion de Barret*/
-    /*No deseo que se usen fuera de la clase*/
+    /*Funciones necesarias para la reduccion de Barret y multiplicacion Montgomery*/
+    /*Barret y Euclides extendido necesitan la division*/
+    /*Euclides extendido necesita el modulo*/
+    /*La division necesita el corrimiento con copia*/
     static void calculaMu();
     std::vector<Fp> &operator /(Fp &b);
-    Fp &corrimientoUnBitDerechaConCopia();
+    Fp &corrimientoUnBitDerechaConCopia();    
+    std::vector<Fp> &EuclidesExtendido(Fp &a,Fp &b);
+    Fp &operator %(Fp &b);
 
     /*Reserva memoria y le asigna el vector al objeto que lo llama*/
     void creaYCopia(uInt64 *unVector,int longitud);
