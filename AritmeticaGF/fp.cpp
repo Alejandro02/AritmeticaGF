@@ -11,9 +11,6 @@ Fp Fp::R0;
 Fp Fp::R1;
 int Fp::k = 0;
 int Fp::kLim = 0;
-uInt64* Fp::aEn32Bits;
-uInt64* Fp::bEn32Bits;
-uInt64* Fp::rEn32Bits;
 
 Fp::Fp(){
     misPalabras = (uInt64*) malloc(sizeof(uInt64) * kLim );
@@ -326,10 +323,6 @@ void Fp::setP(std::string &primoCadena,bool usarBarret){
     Fp::R0.creaYCopia(palabras,k);
     Fp::R1.creaYCopia(palabras,k);
 
-    Fp::aEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 6 * k );
-    Fp::bEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 6 * k );
-    Fp::rEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 6 * k );
-
     if(usarBarret){
         Fp::b.creaYCopia(palabras,k);
         Fp::q.creaYCopia(palabras,k);
@@ -466,32 +459,17 @@ void Fp::multiplicacionBinariaIzquierdaADerecha(Fp &a, Fp &b, Fp &resultado, boo
 
 void Fp::multiplicacionClasica(Fp &a, Fp &b, Fp &resultado, bool reducirAlFinalizar){
     int i,j;
-    uInt64 carrySum,carry;
+    uInt64 s,c;
+    uInt128 sc;
 
-    for(i = 0,j = 0; i < kLim ; i++,j+=2){
-        aEn32Bits[j] = a[i]&0x00000000ffffffff;
-        aEn32Bits[j+1] = a[i]>>32;
+    resultado.limpia();
 
-        bEn32Bits[j] = b[i]&0x00000000ffffffff;
-        bEn32Bits[j+1] = b[i]>>32;
-
-        rEn32Bits[j] = rEn32Bits[j+1] = 0;
-    }
-
-    for(i = 0 ; i < 3*k;i++){
-        carry = 0;
-        for(j = 0 ; j < 3*k;j++){
-            carrySum = rEn32Bits[i+j] + aEn32Bits[j]*bEn32Bits[i] + carry;
-
-            rEn32Bits[i+j] = carrySum&0x00000000ffffffff;
-            carry = carrySum>>32;
+    for(i = 0 ; i < k;i++){
+        for(c = 0,j = 0 ; j < k;j++){
+            MULT64(sc,s,c,a[j],b[i],c,resultado[i+j]);
+            resultado[i+j] = s;
         }
-        rEn32Bits[i+j] = carry;
-    }
-
-    for(i = 0; i < kLim ; i++){
-        resultado[i] = rEn32Bits[2*i];
-        resultado[i] |= rEn32Bits[2*i+1]<<32;
+        resultado[i+j] = c;
     }
 
     if(reducirAlFinalizar)
