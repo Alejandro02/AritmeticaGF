@@ -15,13 +15,12 @@ int main(){
     string stringPrimo("2370FB049D410FBE4E761A9886E502417D023F40180000017E80600000000001");
     Fp::setP(stringPrimo,true);
 
-    Fp x,y;
+    Fp x;
+    Fp y;
+    Fp z;
 
-    x.aleatorizaNumero();
-    x.imprime();
-
-    Fp::exponenciacionBinariaIzquierdaADerecha(x,Fp::getP(),y);
-    y.imprime();
+    printf("p");
+    Fp::getP().imprime();
 
 }
 
