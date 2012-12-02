@@ -17,6 +17,12 @@ template <class T>bool fromStringTo(T& t,const std::string& s,std::ios_base& (*f
 
 typedef unsigned long long int uInt64;
 
+typedef unsigned int uint128_t __attribute__((mode(TI)));
+
+#define MUL64(h,s,c,a,b,d,e)\
+    h = ( (uint128_t) a*b + d + e);\
+    s = h; c = h >> 64;\
+
 class Fp{
 private:    
     /*Otro auxiliar*/
