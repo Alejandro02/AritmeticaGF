@@ -12,9 +12,6 @@ Fp Fp::R0;
 Fp Fp::R1;
 int Fp::k = 0;
 int Fp::kLim = 0;
-uInt64* Fp::aEn32Bits;
-uInt64* Fp::bEn32Bits;
-uInt64* Fp::rEn32Bits;
 
 Fp::Fp(){
     misPalabras = (uInt64*) malloc(sizeof(uInt64) * kLim );
@@ -68,11 +65,11 @@ void Fp::copia(Fp &otroNumero){
 
 void Fp::creaYCopia(uInt64 *unVector,int longitud){
     misPalabras = NULL;
-    misPalabras = (uInt64*) malloc(sizeof(uInt64) *  longitud * 3  );
+    misPalabras = (uInt64*) malloc(sizeof(uInt64) *  longitud * 4  );
 
     for(int i = 0 ; i < longitud;i++){
         (*this)[i] = unVector[i];
-        (*this)[i+longitud] = (*this)[i+2*longitud] = 0;
+        (*this)[i+longitud] = (*this)[i+2*longitud] = (*this)[i+3*longitud] = 0;
     }
 }
 
@@ -320,17 +317,13 @@ void Fp::setP(std::string &primoCadena,bool usarBarret){
         palabras[j] = aux;
     }
     Fp::k = primoLen;
-    Fp::kLim = 3*k;
+    Fp::kLim = 4*k;
 
     /*Inicializacion de los objetos*/
     Fp::primo.creaYCopia(palabras,k);
     Fp::R0.creaYCopia(palabras,k);
     Fp::R1.creaYCopia(palabras,k);
     Fp::auxiliar.creaYCopia(palabras,k);
-
-    Fp::aEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 6 * k );
-    Fp::bEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 6 * k );
-    Fp::rEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 6 * k );
 
     if(usarBarret){
         Fp::b.creaYCopia(palabras,k);
@@ -468,33 +461,18 @@ void Fp::multiplicacionBinariaIzquierdaADerecha(Fp &a, Fp &b, Fp &resultado, boo
 
 void Fp::multiplicacionClasica(Fp &a, Fp &b, Fp &resultado, bool reducirAlFinalizar){
     int i,j;
-    uInt64 carrySum,carry;
+    uInt64 s,c;
+    uint128_t h;
 
-    for(i = 0,j = 0; i < kLim ; i++,j+=2){
-        aEn32Bits[j] = a[i]&0x00000000ffffffff;
-        aEn32Bits[j+1] = a[i]>>32;
+    resultado.limpia();
 
-        bEn32Bits[j] = b[i]&0x00000000ffffffff;
-        bEn32Bits[j+1] = b[i]>>32;
-
-        rEn32Bits[j] = rEn32Bits[j+1] = 0;
-    }
-
-    for(i = 0 ; i < 3*k;i++){
-        carry = 0;
-        for(j = 0 ; j < 3*k;j++){
-            carrySum = rEn32Bits[i+j] + aEn32Bits[j]*bEn32Bits[i] + carry;
-
-            rEn32Bits[i+j] = carrySum&0x00000000ffffffff;
-            carry = carrySum>>32;
+    for(i = 0 ; i < kLim/2;i++){
+        for(c = 0,j = 0 ; j < kLim/2;j++){
+            MUL64(h,s,c,a[j],b[i],resultado[i+j],c)
+            resultado[i+j] = s;
         }
-        rEn32Bits[i+j] = carry;
+        resultado[i+j] = c;
     }
-
-    for(i = 0; i < kLim ; i++){
-        resultado[i] = rEn32Bits[2*i];
-        resultado[i] |= rEn32Bits[2*i+1]<<32;
-    }    
 
     if(reducirAlFinalizar)
         Fp::reduccionBarret(resultado);
@@ -727,9 +705,11 @@ void Fp::exponenciacionBinariaIzquierdaADerecha(Fp &b, Fp &e, Fp &resultado){
     resultado.copia(b);
 
     for(int i = e.longitudEnBits()-2 ; i >= 0;i--){
-        Fp::multiplicacionClasica(resultado,resultado,resultado,true);
+        Fp::multiplicacionClasica(resultado,resultado,auxiliar,true);
+        resultado.copia(auxiliar);
         if(e.bitEnPosicion(i) == 1){
-            Fp::multiplicacionClasica(resultado,b,resultado,true);
+            Fp::multiplicacionClasica(resultado,b,auxiliar,true);
+            resultado.copia(auxiliar);
         }
     }
 }

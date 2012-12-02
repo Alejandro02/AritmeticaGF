@@ -17,10 +17,14 @@ int main(){
 
     Fp x;
     Fp y;
-    Fp z;
 
     printf("p");
     Fp::getP().imprime();
+
+    x.aleatorizaNumero();
+    x.imprime();
+    Fp::exponenciacionBinariaIzquierdaADerecha(x,Fp::getP(),y);
+    y.imprime();
 
 }
 
