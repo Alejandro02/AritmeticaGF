@@ -1,5 +1,6 @@
 #include "fp.h"
 
+Fp Fp::auxiliar;
 Fp Fp::primo;
 Fp Fp::mu;
 Fp Fp::b;
@@ -325,6 +326,7 @@ void Fp::setP(std::string &primoCadena,bool usarBarret){
     Fp::primo.creaYCopia(palabras,k);
     Fp::R0.creaYCopia(palabras,k);
     Fp::R1.creaYCopia(palabras,k);
+    Fp::auxiliar.creaYCopia(palabras,k);
 
     Fp::aEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 6 * k );
     Fp::bEn32Bits = (uInt64*) malloc(sizeof(uInt64) * 6 * k );
@@ -492,7 +494,7 @@ void Fp::multiplicacionClasica(Fp &a, Fp &b, Fp &resultado, bool reducirAlFinali
     for(i = 0; i < kLim ; i++){
         resultado[i] = rEn32Bits[2*i];
         resultado[i] |= rEn32Bits[2*i+1]<<32;
-    }
+    }    
 
     if(reducirAlFinalizar)
         Fp::reduccionBarret(resultado);
@@ -588,7 +590,8 @@ void Fp::reduccionBarret(Fp &t){
     }
 
     while(t > primo){
-        Fp::resta(t,primo,t);
+        Fp::resta(t,primo,R1);
+        t.copia(R1);
     }
 }
 
@@ -725,8 +728,9 @@ void Fp::exponenciacionBinariaIzquierdaADerecha(Fp &b, Fp &e, Fp &resultado){
 
     for(int i = e.longitudEnBits()-2 ; i >= 0;i--){
         Fp::multiplicacionClasica(resultado,resultado,resultado,true);
-        if(e.bitEnPosicion(i) == 1)
+        if(e.bitEnPosicion(i) == 1){
             Fp::multiplicacionClasica(resultado,b,resultado,true);
+        }
     }
 }
 

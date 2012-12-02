@@ -18,7 +18,10 @@ template <class T>bool fromStringTo(T& t,const std::string& s,std::ios_base& (*f
 typedef unsigned long long int uInt64;
 
 class Fp{
-private:
+private:    
+    /*Otro auxiliar*/
+    static Fp auxiliar;
+
     /*Primo que define el campo */
     static Fp primo;
 
