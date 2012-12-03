@@ -28,7 +28,7 @@ private:
     static Fp auxiliar;
 
     /*Primo que define el campo */
-    static Fp primo;
+    static Fp primo;    
 
     /*Para la reduccion Barret*/
     static Fp mu;
@@ -39,14 +39,18 @@ private:
 
     /*Para la multiplicacion Montgomery*/
     static Fp r;
+    static Fp pInv;
 
     /*Auxiliares en reducciones.R0 no debe usarse como resultado en la resta. En su lugar usar R1*/
     static Fp R0;
     static Fp R1;
 
+    /*Tamano de la ventana para la multiplicacion de ventanas fijas*/
+    static int d;
+
     /*Longitud en palabras del primo*/
     static int k;
-    /*Longitud de los */
+    /*Longitud de los objetos en Fp*/
     static int kLim;
 
     /*Numero maximo de digitos hexadecimales en una palabra*/
@@ -63,16 +67,17 @@ private:
     /*Euclides extendido necesita el modulo*/
     /*La division necesita el corrimiento con copia*/
     static void calculaMu();
+    static void inicializacionMontgomery();
     std::vector<Fp> &operator /(Fp &b);
     Fp &corrimientoUnBitDerechaConCopia();    
-    std::vector<Fp> &EuclidesExtendido(Fp &a,Fp &b);
+    std::vector<Fp> &EuclidesExtendido(Fp a,Fp b);
     Fp &operator %(Fp &b);
 
     /*Reserva memoria y le asigna el vector al objeto que lo llama*/
     void creaYCopia(uInt64 *unVector,int longitud);
 
 public:
-    static void setP(std::string &primo,bool usarBarret = false);
+    static void setP(std::string &primo,int ventanaFijaTam = 4);
     static Fp &getP();
 
     Fp();

@@ -8,8 +8,10 @@ Fp Fp::q;
 Fp Fp::residuo1;
 Fp Fp::residuo2;
 Fp Fp::r;
+Fp Fp::pInv;
 Fp Fp::R0;
 Fp Fp::R1;
+int Fp::d = 0;
 int Fp::k = 0;
 int Fp::kLim = 0;
 
@@ -73,10 +75,10 @@ void Fp::creaYCopia(uInt64 *unVector,int longitud){
     }
 }
 
-std::vector<Fp> &Fp::EuclidesExtendido(Fp &a, Fp &b){
+std::vector<Fp> &Fp::EuclidesExtendido(Fp a, Fp b){
     std::vector<Fp> *result = new std::vector<Fp>();
     Fp x,y,q;
-
+int f;
     if(b == 0){
         x[0] = 1;
 
@@ -88,17 +90,25 @@ std::vector<Fp> &Fp::EuclidesExtendido(Fp &a, Fp &b){
 
     //(X,Y,D)
     *result = EuclidesExtendido(b,a%b);
-
     q = (a/b).at(0);
-
     //X' = Y
     x.copia(result->at(1));
     //Y' = X - (a/b)*Y
     Fp::multiplicacionBinariaIzquierdaADerecha(q,result->at(1),R1);
-    Fp::resta(result->at(0),R1,y,true);
+
+    if(result->at(0).esPositivo() && result->at(1).esNegativo()){
+        Fp::suma(result->at(0),R1,y,false);
+        y.setNegativo(false);
+    }else if(result->at(0).esPositivo() && result->at(1).esPositivo()){
+        Fp::resta(result->at(0),R1,y,true);
+    }else if(result->at(0).esNegativo() && result->at(1).esPositivo()){
+        Fp::suma(result->at(0),R1,y,false);
+        y.setNegativo(true);
+    }else if(result->at(0).esNegativo() && result->at(1).esNegativo()){
+        Fp::resta(R1,result->at(0),y,true);
+    }
 
     result->clear();
-
     result->push_back(x);
     result->push_back(y);
 
@@ -119,10 +129,9 @@ Fp &Fp::operator %(Fp &b){
     while(n < residuo1){
         n.corrimientoUnBitIzquierda();
         k++;
-    }
-    n.corrimientoUnBitDerecha();
+    }    
 
-    for(i = 0; i < k;i++){
+    for(i = 0; i < k+1;i++){
         Fp::resta(residuo1,n,residuo2,true);
         if(residuo2.esNegativo())
             residuo2.copia(residuo1);
@@ -263,6 +272,24 @@ void Fp::calculaMu(){
     }
 }
 
+void Fp::inicializacionMontgomery(){
+    Fp::r.limpia();
+
+    Fp::r[0] = 1;
+
+    while(r < primo)
+        r.corrimientoUnBitIzquierda();
+
+    pInv.copia(r.EuclidesExtendido(r,primo).at(1));
+
+    if(pInv.esPositivo()){//-p^-1 mod r
+        Fp::resta(r,pInv,auxiliar,false);
+        pInv.copia(auxiliar);
+    }
+
+    pInv.setNegativo(false);
+}
+
 std::vector<Fp> &Fp::operator /(Fp &b){
     std::vector<Fp> *QR= new std::vector<Fp>();
     Fp q,r;
@@ -285,8 +312,8 @@ std::vector<Fp> &Fp::operator /(Fp &b){
     }
 
     if( r > b || r == b){
-        Fp::resta(r,b,R0);
-        r.copia(R0);
+        Fp::resta(r,b,auxiliar);
+        r.copia(auxiliar);
         Fp::suma(q,1,q,false);
     }
 
@@ -297,7 +324,7 @@ std::vector<Fp> &Fp::operator /(Fp &b){
     return *(QR);
 }
 
-void Fp::setP(std::string &primoCadena,bool usarBarret){
+void Fp::setP(std::string &primoCadena,int ventanaFijaTam){
     uInt64 *palabras,aux;
     int i,j,primoLen = (primoCadena.size()*4)/64;    
 
@@ -318,6 +345,7 @@ void Fp::setP(std::string &primoCadena,bool usarBarret){
     }
     Fp::k = primoLen;
     Fp::kLim = 4*k;
+    Fp::d = ventanaFijaTam;
 
     /*Inicializacion de los objetos*/
     Fp::primo.creaYCopia(palabras,k);
@@ -325,15 +353,19 @@ void Fp::setP(std::string &primoCadena,bool usarBarret){
     Fp::R1.creaYCopia(palabras,k);
     Fp::auxiliar.creaYCopia(palabras,k);
 
-    if(usarBarret){
-        Fp::b.creaYCopia(palabras,k);
-        Fp::q.creaYCopia(palabras,k);
-        Fp::residuo1.creaYCopia(palabras,k);
-        Fp::residuo2.creaYCopia(palabras,k);
-        Fp::mu.creaYCopia(palabras,k);
-        calculaMu();
-    }
+    /*Inicializacion para Barret*/
+    Fp::b.creaYCopia(palabras,k);
+    Fp::q.creaYCopia(palabras,k);
+    Fp::residuo1.creaYCopia(palabras,k);
+    Fp::residuo2.creaYCopia(palabras,k);
+    Fp::mu.creaYCopia(palabras,k);
+    calculaMu();
 
+    /*Inicializacion para Montgomery*/
+    Fp::r.creaYCopia(palabras,k);
+    inicializacionMontgomery();
+
+    /*Inicializacion de la semilla aleatoria*/
     time_t seconds;
     time(&seconds);
     srand((unsigned int) seconds);
@@ -486,9 +518,8 @@ void Fp::reduccionConRestauracion(Fp &t){
         primo.corrimientoUnBitIzquierda();
         kPrima++;
     }
-    primo.corrimientoUnBitDerecha();
 
-    for(int i = 0 ; i < kPrima ;i++){
+    for(int i = 0 ; i < kPrima +1;i++){
         Fp::resta(R0,primo,R1,true);
         if(R1.esNegativo())
             R1.copia(R0);
@@ -507,10 +538,9 @@ void Fp::reduccionSinRestauracion(Fp &t){
     while(primo < R0){
         primo.corrimientoUnBitIzquierda();
         kPrima++;
-    }
-    primo.corrimientoUnBitDerecha();
+    }    
 
-    for(int i = 0 ; i < kPrima ;i++){
+    for(int i = 0 ; i < kPrima + 1;i++){
         if(R0.esNegativo())
             Fp::resta(primo,R0,R1,true);
         else
@@ -719,9 +749,12 @@ void Fp::exponenciacionBinariaDerechaAIzquierda(Fp &b, Fp &e, Fp &resultado){
     resultado[1] = 1;
 
     for(int i = 0 ; i < e.longitudEnBits() ;i++){
-        if(e.bitEnPosicion(i) == 1)
-            Fp::multiplicacionClasica(resultado,b,resultado,true);
-        Fp::multiplicacionClasica(b,b,b,true);
+        if(e.bitEnPosicion(i) == 1){
+            Fp::multiplicacionClasica(resultado,b,auxiliar,true);
+            resultado.copia(auxiliar);
+        }
+        Fp::multiplicacionClasica(b,b,auxiliar,true);
+        b.copia(auxiliar);
     }
 
 }
@@ -732,7 +765,8 @@ void Fp::exponenciacionBinariaSideChannels(Fp &b, Fp &e, Fp &resultado){
     c[0][0] = 1;
 
     for(int i = e.longitudEnBits()- 1 ; i >= 0;i--){
-        Fp::multiplicacionClasica(c[0],c[0],c[0],true);
+        Fp::multiplicacionClasica(c[0],c[0],auxiliar,true);
+        c[0].copia(auxiliar);
         Fp::multiplicacionClasica(c[0],b,c[1],true);
         c[0].copia(c[e.bitEnPosicion(i)]);
     }

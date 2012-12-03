@@ -13,18 +13,13 @@ C5316E71B5505F4859A7E3481198DA00A979761234B981396A895E816EF53FF9
 
 int main(){
     string stringPrimo("2370FB049D410FBE4E761A9886E502417D023F40180000017E80600000000001");
-    Fp::setP(stringPrimo,true);
+    Fp::setP(stringPrimo);
 
     Fp x;
     Fp y;
 
     printf("p");
     Fp::getP().imprime();
-
-    x.aleatorizaNumero();
-    x.imprime();
-    Fp::exponenciacionBinariaIzquierdaADerecha(x,Fp::getP(),y);
-    y.imprime();
 
 }
 
