@@ -9,9 +9,14 @@ Fp Fp::residuo1;
 Fp Fp::residuo2;
 Fp Fp::r;
 Fp Fp::pInv;
+Fp Fp::aBarra;
+Fp Fp::bBarra;
+Fp Fp::cBarra;
+Fp Fp::unoBarra;
 Fp Fp::R0;
 Fp Fp::R1;
 int Fp::d = 0;
+uInt64 Fp::montgFlag = 0;
 int Fp::k = 0;
 int Fp::kLim = 0;
 
@@ -75,10 +80,41 @@ void Fp::creaYCopia(uInt64 *unVector,int longitud){
     }
 }
 
+void Fp::mapeoMontgomery(Fp &a, Fp &aBarra){
+    Fp::multiplicacionClasica(a,Fp::r,aBarra,true);
+}
+
+void Fp::productoMontgomery(Fp &aBarra, Fp &bBarra, Fp &cBarra){
+    Fp t,m,u;
+
+    Fp::multiplicacionBinariaIzquierdaADerecha(aBarra,bBarra,t,false);
+    Fp::multiplicacionClasica(t,Fp::pInv,m,false);
+
+    //Modulo r
+    m[r.longitudEnPalabras()-1] = m[r.longitudEnPalabras()-1]&montgFlag;
+    for(int i = r.longitudEnPalabras(); i <= kLim;i++)
+        m[i] = 0;
+
+    Fp::multiplicacionClasica(m,Fp::primo,u,false);
+    Fp::suma(u,t,u,false);
+
+    for(int i = 0 ; i < r.longitudEnBits()-1;i++)
+        u.corrimientoUnBitDerecha();
+
+    if(u > primo){
+        Fp::resta(u,primo,auxiliar,false);
+        u.copia(auxiliar);
+    }else if(u == primo){
+        u.limpia();
+    }
+
+    cBarra.copia(u);
+}
+
 std::vector<Fp> &Fp::EuclidesExtendido(Fp a, Fp b){
     std::vector<Fp> *result = new std::vector<Fp>();
     Fp x,y,q;
-int f;
+
     if(b == 0){
         x[0] = 1;
 
@@ -288,6 +324,10 @@ void Fp::inicializacionMontgomery(){
     }
 
     pInv.setNegativo(false);
+
+    montgFlag = r[r.longitudEnPalabras()-1];
+    montgFlag = ~(~montgFlag+ 1);
+
 }
 
 std::vector<Fp> &Fp::operator /(Fp &b){
@@ -363,6 +403,11 @@ void Fp::setP(std::string &primoCadena,int ventanaFijaTam){
 
     /*Inicializacion para Montgomery*/
     Fp::r.creaYCopia(palabras,k);
+    Fp::aBarra.creaYCopia(palabras,k);
+    Fp::bBarra.creaYCopia(palabras,k);
+    Fp::cBarra.creaYCopia(palabras,k);
+    Fp::unoBarra.creaYCopia(palabras,k);
+    unoBarra[0] = 1;
     inicializacionMontgomery();
 
     /*Inicializacion de la semilla aleatoria*/
@@ -508,6 +553,16 @@ void Fp::multiplicacionClasica(Fp &a, Fp &b, Fp &resultado, bool reducirAlFinali
 
     if(reducirAlFinalizar)
         Fp::reduccionBarret(resultado);
+}
+
+void Fp::multiplicacionMontgomery(Fp &a, Fp &b, Fp &resultado){
+
+    Fp::mapeoMontgomery(a,aBarra);
+    Fp::mapeoMontgomery(b,bBarra);
+
+    Fp::multiplicacionMontgomery(aBarra,bBarra,cBarra);
+
+    Fp::multiplicacionMontgomery(cBarra,unoBarra,resultado);
 }
 
 void Fp::reduccionConRestauracion(Fp &t){

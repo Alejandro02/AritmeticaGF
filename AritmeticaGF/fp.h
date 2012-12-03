@@ -40,6 +40,10 @@ private:
     /*Para la multiplicacion Montgomery*/
     static Fp r;
     static Fp pInv;
+    static Fp aBarra;
+    static Fp bBarra;
+    static Fp cBarra;
+    static Fp unoBarra;
 
     /*Auxiliares en reducciones.R0 no debe usarse como resultado en la resta. En su lugar usar R1*/
     static Fp R0;
@@ -53,6 +57,7 @@ private:
     /*Longitud de los objetos en Fp*/
     static int kLim;
 
+    static uInt64 montgFlag;
     /*Numero maximo de digitos hexadecimales en una palabra*/
     static const short maxN = 16;
 
@@ -75,6 +80,10 @@ private:
 
     /*Reserva memoria y le asigna el vector al objeto que lo llama*/
     void creaYCopia(uInt64 *unVector,int longitud);
+
+    /*Funciones del producto Montgomery*/
+    static void mapeoMontgomery(Fp &a,Fp &aBarra);
+    static void productoMontgomery(Fp &aBarra,Fp &bBarra, Fp &cBarra);
 
 public:
     static void setP(std::string &primo,int ventanaFijaTam = 4);
@@ -110,9 +119,8 @@ public:
 
     static void multiplicacionBinariaIzquierdaADerecha(Fp &a, Fp &b, Fp &resultado,bool reducirAlFinalizar = false);
     static void multiplicacionClasica(Fp &a, Fp &b, Fp &resultado,bool reducirAlFinalizar = false);
-    /*TODO*/
     static void multiplicacionMontgomery(Fp &a, Fp &b, Fp &resultado);
-    /*TODO end*/
+
     static void exponenciacionBinariaIzquierdaADerecha(Fp &b, Fp &e, Fp &resultado);
     static void exponenciacionBinariaDerechaAIzquierda(Fp &b, Fp &e, Fp &resultado);
     static void exponenciacionBinariaSideChannels(Fp &b, Fp &e, Fp &resultado);
