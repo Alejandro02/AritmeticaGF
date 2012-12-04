@@ -15,16 +15,15 @@ int main(){
     string stringPrimo("2370FB049D410FBE4E761A9886E502417D023F40180000017E80600000000001");
     Fp::setP(stringPrimo,4);
 
-    Fp x;
+    Fp x("1e19970b7d341c8a3f5cc0d910fc415ef744d02142105f6a8359492c049fa387");
     Fp z;
 
     printf("p");
     Fp::getP().imprime();
 
-    for(int i = Fp::getP().longitudEnBits() -1 ; i >= 0;i--)
-        printf("%d",Fp::getP().bitEnPosicion(i));
+    x.imprime();
     Fp::exponenciacionVentanasDeslizantes(x,Fp::getP(),z);
-
+    z.imprime();
 
     return 0;
 }

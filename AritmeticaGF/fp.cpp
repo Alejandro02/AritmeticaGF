@@ -895,7 +895,9 @@ void Fp::exponenciacionVentanasDeslizantes(Fp &b, Fp &e, Fp &resultado){
     int ventana,i,j,k;
     std::vector<int> ventanas;
     std::vector<int> longitudVentanas;
+    Fp  potencias[(1<<d)/2];
 
+    /*Pre computo*/
     //Sacando las ventanas
     for(i = 0 ; i < e.longitudEnBits();i++){
         if(e.bitEnPosicion(i) == 1){
@@ -915,6 +917,31 @@ void Fp::exponenciacionVentanasDeslizantes(Fp &b, Fp &e, Fp &resultado){
         }
     }
 
+    //Potencias solo guarda las potencias impares
+    potencias[0].copia(b);
+    Fp::multiplicacionClasica(b,b,MPotencia,true);
+
+    for(int i = 1 ; i < (1<<d)/2;i++){
+        Fp::multiplicacionClasica(potencias[i-1],MPotencia,potencias[i],true);
+    }
+    /*Termina precomputo*/
+
+    ventana = ventanas.at(ventanas.size()-1)/2;
+    resultado.copia(potencias[ventana]);
+
+    for(i = ventanas.size()-2; i >= 0;i--){
+        //Cuadrados
+        for( j = 0; j < longitudVentanas.at(i); j++ ){
+            Fp::multiplicacionClasica(resultado,resultado,MPotencia,true);
+            resultado.copia(MPotencia);
+        }
+
+        if(ventanas.at(i) != 0){
+            ventana = ventanas.at(i)/2;
+            Fp::multiplicacionClasica(resultado,potencias[ventana],MPotencia,true);
+            resultado.copia(MPotencia);
+        }
+    }
 }
 
 
