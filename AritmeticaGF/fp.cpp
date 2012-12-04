@@ -829,11 +829,12 @@ void Fp::exponenciacionBinariaSideChannels(Fp &b, Fp &e, Fp &resultado){
 
     c[0][0] = 1;
 
-    for(int i = e.longitudEnBits()- 1 ; i >= 0;i--){
-        Fp::multiplicacionClasica(c[0],c[0],auxiliar,true);
+    for(int i = e.longitudEnBits() - 1 ; i >= 0;i--){
+        Fp::multiplicacionClasica(c[0],c[0],auxiliar,true);        
         c[0].copia(auxiliar);
-        Fp::multiplicacionClasica(c[0],b,c[1],true);
-        c[0].copia(c[e.bitEnPosicion(i)]);
+        Fp::multiplicacionClasica(c[0],b,c[1],true);        
+        auxiliar.copia(c[e.bitEnPosicion(i)]);
+        c[0].copia(auxiliar);
     }
 
     resultado.copia(c[0]);

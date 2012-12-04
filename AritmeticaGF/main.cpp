@@ -23,7 +23,8 @@ int main(){
 
     x.aleatorizaNumero();
     x.imprime();
-    Fp::exponenciacionVentanasFijas(x,Fp::getP(),z);
+
+    Fp::exponenciacionBinariaSideChannels(x,Fp::getP(),z);
     z.imprime();
     return 0;
 }
