@@ -13,14 +13,20 @@ C5316E71B5505F4859A7E3481198DA00A979761234B981396A895E816EF53FF9
 
 int main(){
     string stringPrimo("2370FB049D410FBE4E761A9886E502417D023F40180000017E80600000000001");
-    Fp::setP(stringPrimo);
+    Fp::setP(stringPrimo,4);
 
-    Fp x;
-    Fp y;
+    Fp x("dd85d8fd73bdc4d53219d426d0eb997fe4564d1e18ba4094313b70a08e0bf28");
+    Fp y("b7e17edd0a6d4befa64e8438d8ce3df47b9015c7fcda9606630f29a65bd6bff");
+    Fp z;
 
     printf("p");
     Fp::getP().imprime();
 
+    Fp::multiplicacionMontgomery(x,y,z);
+    z.imprime();
+    Fp::multiplicacionClasica(x,y,z,true);
+    z.imprime();
+    return 0;
 }
 
 

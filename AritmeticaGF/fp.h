@@ -44,17 +44,22 @@ private:
     static Fp bBarra;
     static Fp cBarra;
     static Fp unoBarra;
+    static Fp t;
+    static Fp m;
+    static Fp u;
+
 
     /*Auxiliares en reducciones.R0 no debe usarse como resultado en la resta. En su lugar usar R1*/
     static Fp R0;
     static Fp R1;
 
     /*Tamano de la ventana para la multiplicacion de ventanas fijas*/
-    static int d;
+    static int d;    
+    static Fp MPotencia;
 
     /*Longitud en palabras del primo*/
     static int k;
-    /*Longitud de los objetos en Fp*/
+    /*Longitud de los objetos en Fp, multiplo de k*/
     static int kLim;
 
     static uInt64 montgFlag;

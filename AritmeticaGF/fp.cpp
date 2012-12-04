@@ -13,9 +13,13 @@ Fp Fp::aBarra;
 Fp Fp::bBarra;
 Fp Fp::cBarra;
 Fp Fp::unoBarra;
+Fp Fp::t;
+Fp Fp::m;
+Fp Fp::u;
 Fp Fp::R0;
 Fp Fp::R1;
 int Fp::d = 0;
+Fp Fp::MPotencia;
 uInt64 Fp::montgFlag = 0;
 int Fp::k = 0;
 int Fp::kLim = 0;
@@ -38,23 +42,22 @@ Fp::Fp(std::string numeroEnHex){
 }
 
 void Fp::aleatorizaNumero(){    
-    short aux;
+    unsigned short aux;
 
     for(int i = 0; i < k ;i++){
-        aux = rand();
+        aux = (unsigned short) rand();
         (*this)[i] = aux;
         (*this)[i] <<= 16;
 
-        aux = rand();
+        aux = (unsigned short) rand();
         (*this)[i] |= aux;
         (*this)[i] <<= 16;
 
-
-        aux = rand();
+        aux = (unsigned short) rand();
         (*this)[i] |= aux;
         (*this)[i] <<= 16;
 
-        aux = rand();
+        aux = (unsigned short) rand();
         (*this)[i] |= aux;
     }
 
@@ -85,11 +88,9 @@ void Fp::mapeoMontgomery(Fp &a, Fp &aBarra){
 }
 
 void Fp::productoMontgomery(Fp &aBarra, Fp &bBarra, Fp &cBarra){
-    Fp t,m,u;
 
-    Fp::multiplicacionBinariaIzquierdaADerecha(aBarra,bBarra,t,false);
+    Fp::multiplicacionClasica(aBarra,bBarra,t,false);
     Fp::multiplicacionClasica(t,Fp::pInv,m,false);
-
     //Modulo r
     m[r.longitudEnPalabras()-1] = m[r.longitudEnPalabras()-1]&montgFlag;
     for(int i = r.longitudEnPalabras(); i <= kLim;i++)
@@ -327,7 +328,6 @@ void Fp::inicializacionMontgomery(){
 
     montgFlag = r[r.longitudEnPalabras()-1];
     montgFlag = ~(~montgFlag+ 1);
-
 }
 
 std::vector<Fp> &Fp::operator /(Fp &b){
@@ -383,15 +383,17 @@ void Fp::setP(std::string &primoCadena,int ventanaFijaTam){
         fromStringTo<uInt64>(aux,primoCadena.substr(0,i),std::hex);
         palabras[j] = aux;
     }
+
+
+    /*Inicializacion del campo*/
     Fp::k = primoLen;
     Fp::kLim = 4*k;
-    Fp::d = ventanaFijaTam;
-
-    /*Inicializacion de los objetos*/
+    Fp::auxiliar.creaYCopia(palabras,k);
     Fp::primo.creaYCopia(palabras,k);
+
+    /*Inicializacion para reducciones*/
     Fp::R0.creaYCopia(palabras,k);
     Fp::R1.creaYCopia(palabras,k);
-    Fp::auxiliar.creaYCopia(palabras,k);
 
     /*Inicializacion para Barret*/
     Fp::b.creaYCopia(palabras,k);
@@ -407,8 +409,16 @@ void Fp::setP(std::string &primoCadena,int ventanaFijaTam){
     Fp::bBarra.creaYCopia(palabras,k);
     Fp::cBarra.creaYCopia(palabras,k);
     Fp::unoBarra.creaYCopia(palabras,k);
+    Fp::t.creaYCopia(palabras,k);
+    Fp::m.creaYCopia(palabras,k);
+    Fp::u.creaYCopia(palabras,k);
+    Fp::unoBarra.limpia();
     unoBarra[0] = 1;
     inicializacionMontgomery();
+
+    /*Inicializacion para Ventajas fijas*/
+    Fp::d = ventanaFijaTam;
+    Fp::MPotencia.creaYCopia(palabras,k);
 
     /*Inicializacion de la semilla aleatoria*/
     time_t seconds;
@@ -420,7 +430,7 @@ Fp &Fp::getP(){
     return Fp::primo;
 }
 
-void Fp::suma(Fp &a, Fp &b, Fp &resultado,bool reducirAlFinalizar ){
+void Fp::suma(Fp &a, Fp &b, Fp &resultado,bool reducirAlFinalizar){
     int i,c;
     uInt64 s,aux;
 
@@ -431,10 +441,11 @@ void Fp::suma(Fp &a, Fp &b, Fp &resultado,bool reducirAlFinalizar ){
         resultado[i] = s;
     }
 
-    if(resultado > Fp::primo && reducirAlFinalizar){
+
+    if( (resultado > Fp::primo) && (reducirAlFinalizar == true)){
         Fp::resta(resultado,Fp::primo,R0);
         resultado.copia(R0);
-    }else if(resultado == Fp::primo && reducirAlFinalizar){
+    }else if((resultado == Fp::primo) && (reducirAlFinalizar == true)){
         resultado.limpia();
     }
 }
@@ -560,9 +571,8 @@ void Fp::multiplicacionMontgomery(Fp &a, Fp &b, Fp &resultado){
     Fp::mapeoMontgomery(a,aBarra);
     Fp::mapeoMontgomery(b,bBarra);
 
-    Fp::multiplicacionMontgomery(aBarra,bBarra,cBarra);
-
-    Fp::multiplicacionMontgomery(cBarra,unoBarra,resultado);
+    Fp::productoMontgomery(aBarra,bBarra,cBarra);
+    Fp::productoMontgomery(cBarra,unoBarra,resultado);
 }
 
 void Fp::reduccionConRestauracion(Fp &t){
@@ -827,6 +837,55 @@ void Fp::exponenciacionBinariaSideChannels(Fp &b, Fp &e, Fp &resultado){
     }
 
     resultado.copia(c[0]);
+}
+
+void Fp::exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado){
+    short ventana,aux,bitsEnPrimeraPalabra;
+    int i,j,k;
+    Fp potencias[1 << d];
+
+    bitsEnPrimeraPalabra = e.longitudEnBits()%d;
+
+    resultado.limpia();
+
+    /*Pre computo*/
+    potencias[0].limpia();
+    potencias[0][0] = 1;
+    potencias[1].copia(b);
+
+    for(int i = 2 ; i < (1<<d);i++){
+        MPotencia.copia(potencias[i-1]);
+        Fp::multiplicacionClasica(MPotencia,b,potencias[i]);
+    }
+    /*Termina precomputo*/
+
+    j = e.longitudEnBits()-1;
+
+    bitsEnPrimeraPalabra = (bitsEnPrimeraPalabra != 0) ? bitsEnPrimeraPalabra : d;
+
+    for(ventana = 0 , i = 0 ; i < bitsEnPrimeraPalabra;i++,j--){
+        ventana = ventana << 1;
+        aux = e.bitEnPosicion(j);
+        ventana += aux;
+    }
+    resultado.copia(potencias[ventana]);
+
+    for(i = j; i >= 0; i -= d){
+        //Cuadrados
+        for(k = 0; k < d;k++){
+            Fp::multiplicacionClasica(resultado,resultado,MPotencia);
+            resultado.copia(MPotencia);
+        }
+        //Sacando la ventana
+        for(ventana = 0, j = 0; j < d;j++){
+            ventana = ventana << 1;
+            aux = e.bitEnPosicion(i-j);
+            ventana += aux;
+        }
+        //No importa si la ventana esta apagada, el primer elemento de potencias maneja ese caso.
+        Fp::multiplicacionClasica(resultado,potencias[ventana],MPotencia);
+        resultado.copia(MPotencia);
+    }
 }
 
 
