@@ -13,69 +13,35 @@ C5316E71B5505F4859A7E3481198DA00A979761234B981396A895E816EF53FF9
 
 int main(){
     string stringPrimo("2370FB049D410FBE4E761A9886E502417D023F40180000017E80600000000001");
-    Fp::setP(stringPrimo,4);
-
-    Fp x("1e19970b7d341c8a3f5cc0d910fc415ef744d02142105f6a8359492c049fa387");
-    Fp z;
-
-    printf("p");
-    Fp::getP().imprime();
-
-    x.imprime();
-    Fp::exponenciacionVentanasDeslizantes(x,Fp::getP(),z);
-    z.imprime();
-
-    return 0;
-}
-
-
-/* Main para probar los metodos de multiplicacion y reduccion*/
-/*int main(){
-    string stringPrimo("2370FB049D410FBE4E761A9886E502417D023F40180000017E80600000000001");
     Fp::setP(stringPrimo,true);
 
-    Fp x;
-    Fp y;
-    Fp z;
-    Fp rNoRestoring,rRestoring,rBarret;
+    Fp x,xInv,z,phi;
+
+    Fp::resta(Fp::getP(),2,phi);
 
     printf("p");
-    Fp::getP().imprime();
+    Fp::getP().imprime();        
 
-    for(int i = 0 ; i < 50000; i++){
+    for(int i = 0 ; i < 10000; i++){
+        //Numero aleatorio
         x.aleatorizaNumero();
-        y.aleatorizaNumero();
+        //Obteniendo su inverso
+        Fp::exponenciacionVentanasFijas(x,phi,xInv);
+        //Multiplicando x por su inverso
+        Fp::multiplicacionClasica(x,xInv,z,true);
 
-        Fp::multiplicacionClasica(x,y,rRestoring);
-        rNoRestoring.copia(rRestoring);
-        rBarret.copia(rRestoring);
-
-        Fp::reduccionConRestauracion(rRestoring);
-        Fp::reduccionSinRestauracion(rNoRestoring);
-        Fp::reduccionBarret(rBarret);
-
-        if( !(rRestoring == rNoRestoring) && !(rNoRestoring == rBarret) ){
-            printf("Iteracion %d",(i+1));
-            Fp::multiplicacionClasica(x,y,z);
-
-            printf("Residuo con restauracion");
-            rRestoring.imprime();
-            printf("Residuo sin restauracion");
-            rNoRestoring.imprime();
-            printf("Restauracion Barret");
-            rBarret.imprime();
-
+        if( !(z == 1) ){
             printf("X");
             x.imprime();
-            printf("Y");
-            y.imprime();
-            printf("X*Y");
+            printf("X^-1");
+            xInv.imprime();
+            printf("X*X^-1");
             z.imprime();
             printf("\n\n");
+            perror("Incongruencia");
             exit(0);
         }
-
     }
     return 0;
-}*/
+}
 
