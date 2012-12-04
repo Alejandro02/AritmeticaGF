@@ -855,8 +855,9 @@ void Fp::exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado){
 
     for(int i = 2 ; i < (1<<d);i++){
         MPotencia.copia(potencias[i-1]);
-        Fp::multiplicacionClasica(MPotencia,b,potencias[i]);
+        Fp::multiplicacionClasica(MPotencia,b,potencias[i],true);
     }
+
     /*Termina precomputo*/
 
     j = e.longitudEnBits()-1;
@@ -868,12 +869,13 @@ void Fp::exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado){
         aux = e.bitEnPosicion(j);
         ventana += aux;
     }
+
     resultado.copia(potencias[ventana]);
 
     for(i = j; i >= 0; i -= d){
         //Cuadrados
         for(k = 0; k < d;k++){
-            Fp::multiplicacionClasica(resultado,resultado,MPotencia);
+            Fp::multiplicacionClasica(resultado,resultado,MPotencia,true);
             resultado.copia(MPotencia);
         }
         //Sacando la ventana
@@ -883,7 +885,7 @@ void Fp::exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado){
             ventana += aux;
         }
         //No importa si la ventana esta apagada, el primer elemento de potencias maneja ese caso.
-        Fp::multiplicacionClasica(resultado,potencias[ventana],MPotencia);
+        Fp::multiplicacionClasica(resultado,potencias[ventana],MPotencia,true);
         resultado.copia(MPotencia);
     }
 }
