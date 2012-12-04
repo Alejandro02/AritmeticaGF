@@ -21,11 +21,11 @@ int main(){
     printf("p");
     Fp::getP().imprime();
 
-    x.aleatorizaNumero();
-    x.imprime();
+    for(int i = Fp::getP().longitudEnBits() -1 ; i >= 0;i--)
+        printf("%d",Fp::getP().bitEnPosicion(i));
+    Fp::exponenciacionVentanasDeslizantes(x,Fp::getP(),z);
 
-    Fp::exponenciacionBinariaSideChannels(x,Fp::getP(),z);
-    z.imprime();
+
     return 0;
 }
 

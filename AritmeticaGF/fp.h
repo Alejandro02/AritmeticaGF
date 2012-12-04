@@ -128,9 +128,9 @@ public:
 
     static void exponenciacionBinariaIzquierdaADerecha(Fp &b, Fp &e, Fp &resultado);
     static void exponenciacionBinariaDerechaAIzquierda(Fp &b, Fp &e, Fp &resultado);
-    static void exponenciacionBinariaSideChannels(Fp &b, Fp &e, Fp &resultado);
-    /*TODO*/
+    static void exponenciacionBinariaSideChannels(Fp &b, Fp &e, Fp &resultado);    
     static void exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado);
+    /*TODO*/
     static void exponenciacionVentanasDeslizantes(Fp &b, Fp &e, Fp &resultado);
     /*TODO end*/
     static void reduccionBarret(Fp &t);    

@@ -891,5 +891,31 @@ void Fp::exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado){
     }
 }
 
+void Fp::exponenciacionVentanasDeslizantes(Fp &b, Fp &e, Fp &resultado){
+    int ventana,i,j,k;
+    std::vector<int> ventanas;
+    std::vector<int> longitudVentanas;
+
+    //Sacando las ventanas
+    for(i = 0 ; i < e.longitudEnBits();i++){
+        if(e.bitEnPosicion(i) == 1){
+            for(ventana = 0,j = 0 ; j < d && i < e.longitudEnBits() ; j++,i++){
+                ventana += e.bitEnPosicion(i)<<j;
+            }
+            i--;
+            ventanas.push_back(ventana);
+            longitudVentanas.push_back(d);
+            k = 0;
+        }else{
+            k++;
+            if(e.bitEnPosicion(i+1) == 1){
+                ventanas.push_back(0);
+                longitudVentanas.push_back(k);
+            }
+        }
+    }
+
+}
+
 
 
