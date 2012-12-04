@@ -56,6 +56,8 @@ private:
     /*Tamano de la ventana para la multiplicacion de ventanas fijas*/
     static int d;    
     static Fp MPotencia;
+    static Fp** potencias;
+    static Fp** potenciasImpares;
 
     /*Longitud en palabras del primo*/
     static int k;
@@ -130,9 +132,8 @@ public:
     static void exponenciacionBinariaDerechaAIzquierda(Fp &b, Fp &e, Fp &resultado);
     static void exponenciacionBinariaSideChannels(Fp &b, Fp &e, Fp &resultado);    
     static void exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado);
-    /*TODO*/
     static void exponenciacionVentanasDeslizantes(Fp &b, Fp &e, Fp &resultado);
-    /*TODO end*/
+
     static void reduccionBarret(Fp &t);    
     static void reduccionConRestauracion(Fp &t);
     static void reduccionSinRestauracion(Fp &t);
