@@ -56,8 +56,8 @@ private:
     /*Tamano de la ventana para la multiplicacion de ventanas fijas*/
     static int d;    
     static Fp MPotencia;
-    static Fp** potencias;
-    static Fp** potenciasImpares;
+    static std::vector<Fp> potencias;
+    static std::vector<Fp> potenciasImpares;
 
     /*Longitud en palabras del primo*/
     static int k;

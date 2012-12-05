@@ -20,8 +20,8 @@ Fp Fp::R0;
 Fp Fp::R1;
 int Fp::d = 0;
 Fp Fp::MPotencia;
-Fp** Fp::potencias;
-Fp** Fp::potenciasImpares;
+std::vector<Fp> Fp::potencias;
+std::vector<Fp> Fp::potenciasImpares;
 uInt64 Fp::montgFlag = 0;
 int Fp::k = 0;
 int Fp::kLim = 0;
@@ -421,13 +421,11 @@ void Fp::setP(std::string &primoCadena,int ventanaFijaTam){
     /*Inicializacion para Ventajas fijas*/
     Fp::d = ventanaFijaTam;
     Fp::MPotencia.creaYCopia(palabras,k);
-    Fp::potencias = (Fp**) malloc(sizeof(Fp)*(1<<d));
-    Fp::potenciasImpares = (Fp**) malloc(sizeof(Fp)*((1<<d)/2));
 
     for(int i = 0 ; i < 1<<d;i++){
-        Fp::potencias[i] = new Fp();
+        Fp::potencias.push_back(*(new Fp()));
         if(i%2 == 1)
-            Fp::potenciasImpares[i] = new Fp();
+            Fp::potenciasImpares.push_back(*(new Fp()));
     }
 
 
@@ -852,7 +850,7 @@ void Fp::exponenciacionBinariaSideChannels(Fp &b, Fp &e, Fp &resultado){
 }
 
 void Fp::exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado){
-    short ventana,aux,bitsEnPrimeraPalabra;
+    short ventana,bitsEnPrimeraPalabra;
     int i,j,k;    
 
     bitsEnPrimeraPalabra = e.longitudEnBits()%d;
@@ -860,28 +858,26 @@ void Fp::exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado){
     resultado.limpia();
 
     /*Pre computo*/
-    potencias[0]->limpia();
-    (*potencias[0])[0] = 1;
-    potencias[1]->copia(b);
+    potencias[0].limpia();
+    potencias[0][0] = 1;
+    potencias[1].copia(b);
 
     for(int i = 2 ; i < (1<<d);i++){
-        MPotencia.copia((*potencias[i-1]));
-        Fp::multiplicacionClasica(MPotencia,b,(*potencias[i]),true);
+        MPotencia.copia(potencias[i-1]);
+        Fp::multiplicacionClasica(MPotencia,b,potencias[i],true);
     }
 
     /*Termina precomputo*/
-
     j = e.longitudEnBits()-1;
 
     bitsEnPrimeraPalabra = (bitsEnPrimeraPalabra != 0) ? bitsEnPrimeraPalabra : d;
 
     for(ventana = 0 , i = 0 ; i < bitsEnPrimeraPalabra;i++,j--){
         ventana = ventana << 1;
-        aux = e.bitEnPosicion(j);
-        ventana += aux;
+        ventana |= e.bitEnPosicion(j);
     }
 
-    resultado.copia((*potencias[ventana]));
+    resultado.copia(potencias[ventana]);
 
     for(i = j; i >= 0; i -= d){
         //Cuadrados
@@ -892,11 +888,11 @@ void Fp::exponenciacionVentanasFijas(Fp &b, Fp &e, Fp &resultado){
         //Sacando la ventana
         for(ventana = 0, j = 0; j < d;j++){
             ventana = ventana << 1;
-            aux = e.bitEnPosicion(i-j);
-            ventana += aux;
+            ventana |= e.bitEnPosicion(i-j);
         }
+
         //No importa si la ventana esta apagada, el primer elemento de potencias maneja ese caso.
-        Fp::multiplicacionClasica(resultado,(*potencias[ventana]),MPotencia,true);
+        Fp::multiplicacionClasica(resultado,potencias[ventana],MPotencia,true);
         resultado.copia(MPotencia);
     }
 }
@@ -927,16 +923,16 @@ void Fp::exponenciacionVentanasDeslizantes(Fp &b, Fp &e, Fp &resultado){
     }
 
     //Potencias solo guarda las potencias impares
-    potencias[0]->copia(b);
+    potenciasImpares[0].copia(b);
     Fp::multiplicacionClasica(b,b,MPotencia,true);
 
     for(int i = 1 ; i < (1<<d)/2;i++){
-        Fp::multiplicacionClasica((*potencias[i-1]),MPotencia,(*potencias[i]),true);
+        Fp::multiplicacionClasica(potenciasImpares[i-1],MPotencia,potenciasImpares[i],true);
     }
     /*Termina precomputo*/
 
     ventana = ventanas.at(ventanas.size()-1)/2;
-    resultado.copia((*potencias[ventana]));
+    resultado.copia(potenciasImpares[ventana]);
 
     for(i = ventanas.size()-2; i >= 0;i--){
         //Cuadrados
@@ -947,7 +943,7 @@ void Fp::exponenciacionVentanasDeslizantes(Fp &b, Fp &e, Fp &resultado){
 
         if(ventanas.at(i) != 0){
             ventana = ventanas.at(i)/2;
-            Fp::multiplicacionClasica(resultado,(*potencias[ventana]),MPotencia,true);
+            Fp::multiplicacionClasica(resultado,potenciasImpares[ventana],MPotencia,true);
             resultado.copia(MPotencia);
         }
     }

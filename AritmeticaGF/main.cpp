@@ -13,7 +13,7 @@ C5316E71B5505F4859A7E3481198DA00A979761234B981396A895E816EF53FF9
 
 int main(){
     string stringPrimo("2370FB049D410FBE4E761A9886E502417D023F40180000017E80600000000001");
-    Fp::setP(stringPrimo,true);
+    Fp::setP(stringPrimo,4);
 
     Fp x,xInv,z,phi;
 
@@ -26,7 +26,7 @@ int main(){
         //Numero aleatorio
         x.aleatorizaNumero();
         //Obteniendo su inverso
-        Fp::exponenciacionVentanasFijas(x,phi,xInv);
+        Fp::exponenciacionVentanasDeslizantes(x,phi,xInv);
         //Multiplicando x por su inverso
         Fp::multiplicacionClasica(x,xInv,z,true);
 
@@ -40,7 +40,7 @@ int main(){
             printf("\n\n");
             perror("Incongruencia");
             exit(0);
-        }
+        }                
     }
     return 0;
 }
