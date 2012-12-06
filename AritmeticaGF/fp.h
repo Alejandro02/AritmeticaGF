@@ -59,11 +59,6 @@ private:
     static std::vector<Fp> potencias;
     static std::vector<Fp> potenciasImpares;
 
-    /*Longitud en palabras del primo*/
-    static int k;
-    /*Longitud de los objetos en Fp, multiplo de k*/
-    static int kLim;
-
     static uInt64 montgFlag;
     /*Numero maximo de digitos hexadecimales en una palabra*/
     static const short maxN = 16;
@@ -93,6 +88,13 @@ private:
     static void productoMontgomery(Fp &aBarra,Fp &bBarra, Fp &cBarra);
 
 public:
+    /*Longitud en palabras del primo*/
+    static int k;
+    /*Longitud de los objetos en Fp, multiplo de k*/
+    static int kLim;
+    /*Solo reserva la memoria*/
+    void crea(int longitud);
+
     static void setP(std::string &primo,int ventanaFijaTam = 4);
     static Fp &getP();
 

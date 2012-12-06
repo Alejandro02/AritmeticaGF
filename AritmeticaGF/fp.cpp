@@ -114,6 +114,15 @@ void Fp::productoMontgomery(Fp &aBarra, Fp &bBarra, Fp &cBarra){
     cBarra.copia(u);
 }
 
+void Fp::crea(int longitud){
+    misPalabras = NULL;
+    misPalabras = (uInt64*) malloc(sizeof(uInt64) *  longitud * 4  );
+
+    for(int i = 0 ; i < longitud;i++){
+         (*this)[i] = (*this)[i+longitud] = (*this)[i+2*longitud] = (*this)[i+3*longitud] = 0;
+    }
+}
+
 std::vector<Fp> &Fp::EuclidesExtendido(Fp a, Fp b){
     std::vector<Fp> *result = new std::vector<Fp>();
     Fp x,y,q;
@@ -452,7 +461,7 @@ void Fp::suma(Fp &a, Fp &b, Fp &resultado,bool reducirAlFinalizar){
 
 
     if( (resultado > Fp::primo) && (reducirAlFinalizar == true)){
-        Fp::resta(resultado,Fp::primo,R0);
+        Fp::resta(resultado,Fp::primo,R0,true);
         resultado.copia(R0);
     }else if((resultado == Fp::primo) && (reducirAlFinalizar == true)){
         resultado.limpia();
@@ -478,7 +487,7 @@ void Fp::suma(Fp &a, uInt64 b, Fp &resultado,bool reducirAlFinalizar ){
     }
 
     if(resultado > Fp::primo && reducirAlFinalizar){
-        Fp::resta(resultado,Fp::primo,R0);
+        Fp::resta(resultado,Fp::primo,R0,true);
         resultado.copia(R0);
     }else if(resultado == Fp::primo && reducirAlFinalizar){
         resultado.limpia();
@@ -500,7 +509,7 @@ void Fp::resta(Fp &a, Fp &b, Fp &resultado,bool permitirResultadosNegativos ){
         Fp::suma(resultado,1,resultado);
 
         if(!permitirResultadosNegativos){
-            Fp::resta(Fp::primo,resultado,R0);
+            Fp::resta(Fp::primo,resultado,R0,true);
             resultado.copia(R0);
         }else{
             resultado.setNegativo(true);
@@ -530,7 +539,7 @@ void Fp::resta(Fp &a, uInt64 b, Fp &resultado,bool permitirResultadosNegativos){
         Fp::suma(resultado,1,resultado);
 
         if(!permitirResultadosNegativos){
-            Fp::resta(Fp::primo,resultado,R0);
+            Fp::resta(Fp::primo,resultado,R0,true);
             resultado.copia(R0);
         }else{
             resultado.setNegativo(true);
