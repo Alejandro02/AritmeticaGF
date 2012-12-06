@@ -33,7 +33,7 @@ public:
 
     void estableceCoeficiente(std::string numero, int i);
     void limpia();
-    void imprime();
+    void imprime(bool saltosDeLinea = true);
 
     Fp &operator [](int i);
 };

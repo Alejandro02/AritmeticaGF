@@ -97,8 +97,9 @@ void Fp2::limpia(){
     coeficientes[1].limpia();
 }
 
-void Fp2::imprime(){
-    printf("\n");
+void Fp2::imprime(bool saltosDeLinea){
+    if(saltosDeLinea)
+        printf("\n");
     int aux;
 
     if((*this)[1].longitudEnPalabras() != 0){
@@ -132,8 +133,8 @@ void Fp2::imprime(){
 
     if((*this)[0].longitudEnPalabras() == 0 && (*this)[1].longitudEnPalabras() == 0)
         printf("0");
-
-    printf("\n");
+    if(saltosDeLinea)
+        printf("\n");
 }
 
 Fp &Fp2::operator [](int i){
