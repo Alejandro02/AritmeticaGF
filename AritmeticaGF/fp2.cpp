@@ -21,13 +21,17 @@ void Fp2::creaCampo(std::string &primo){
     Fp2::A.crea(Fp::k);
     Fp2::B.crea(Fp::k);
     Fp2::pMenos2.crea(Fp::k);
-
     beta.limpia();
     Fp::resta(Fp::getP(),5,beta,true);
     betaNegativo.limpia();
     betaNegativo[0] = 5;
     pMenos2.limpia();
     Fp::resta(Fp::getP(),2,pMenos2,true);
+}
+
+void Fp2::crea(Fp2 &a){
+    a[0].crea(Fp::k);
+    a[1].crea(Fp::k);
 }
 
 Fp2::Fp2(){
@@ -62,6 +66,11 @@ void Fp2::multiplicacion(Fp2 &a, Fp2 &b, Fp2 &c){
     Fp::resta(t2,t1,c[1]);
 }
 
+void Fp2::multiplicacion(Fp2 &a, Fp &b, Fp2 &c){
+    Fp::multiplicacionClasica(a[0],b,c[0],true);
+    Fp::multiplicacionClasica(a[1],b,c[1],true);
+}
+
 void Fp2::cuadrado(Fp2 &a, Fp2 &c){
     Fp::resta(a[0],a[1],t0);
     Fp::multiplicacionClasica(beta,a[1],A,true);
@@ -93,8 +102,13 @@ void Fp2::estableceCoeficiente(std::string numero, int i){
 }
 
 void Fp2::limpia(){
-    coeficientes[0].limpia();
-    coeficientes[1].limpia();
+    (*this)[0].limpia();
+    (*this)[1].limpia();
+}
+
+void Fp2::copia(Fp2 &b){
+    (*this)[0].copia(b[0]);
+    (*this)[1].copia(b[1]);
 }
 
 void Fp2::imprime(bool saltosDeLinea){

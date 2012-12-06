@@ -12,6 +12,24 @@ void Fp12::estableceCoeficiente(std::string numero, int i){
 }
 
 void Fp12::limpia(){
-    coeficientes[0].limpia();
-    coeficientes[1].limpia();
+    (*this)[0].limpia();
+    (*this)[1].limpia();
+}
+
+void Fp12::imprime(){
+    printf("\n");
+
+    printf("(");
+    (*this)[1].imprime(false);
+    printf(")w");
+
+    printf(" + ");
+
+    (*this)[0].imprime(false);
+
+    printf("\n");
+}
+
+Fp6 &Fp12::operator [](int i){
+    return coeficientes[i];
 }
