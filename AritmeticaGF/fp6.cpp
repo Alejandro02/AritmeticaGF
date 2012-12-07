@@ -36,6 +36,12 @@ void Fp6::creaCampo(std::string &primo){
 
 }
 
+void Fp6::crea(Fp6 &a){
+    Fp2::crea(a[0]);
+    Fp2::crea(a[1]);
+    Fp2::crea(a[2]);
+}
+
 Fp6::Fp6(){
 
 }
@@ -176,8 +182,24 @@ void Fp6::multiplicacion(Fp6 &a, Fp6 &b, Fp6 &c){
 
     Fp2::suma(auxiliar1,t1,c[2]);
 
-    //Empieza (a0+a2)(b0+b2)-t0-t2+t1
+    //Termina (a0+a2)(b0+b2)-t0-t2+t1
 
+}
+
+void Fp6::multiplicacionGamma(Fp6 &a, Fp6 &c){
+    auxiliar1.limpia();
+    auxiliar1[1].copia(a[2][0]);
+    Fp::multiplicacionClasica(a[2][1],Fp2::beta,auxiliar1[0],true);
+
+    c[0].copia(auxiliar1);
+    c[1].copia(a[0]);
+    c[2].copia(a[1]);
+}
+
+void Fp6::multiplicacionPorDos(Fp6 &a, Fp6 &c){
+    Fp2::multiplicacion(a[0],dos,c[0]);
+    Fp2::multiplicacion(a[1],dos,c[1]);
+    Fp2::multiplicacion(a[2],dos,c[2]);
 }
 
 void Fp6::cuadrado(Fp6 &a, Fp6 &c){

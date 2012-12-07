@@ -24,6 +24,7 @@ class Fp6{
     static Fp dos;
 public:
     static void creaCampo(std::string &primo);
+    static void crea(Fp6 &a);
     Fp6();
 
     static void suma(Fp6 &a,Fp6 &b,Fp6 &c);
@@ -31,6 +32,9 @@ public:
     static void multiplicacion(Fp6 &a,Fp2 &b,Fp6 &c);
     static void multiplicacion(Fp6 &a,Fp2 &b0,Fp2 &b1,Fp6 &c);
     static void multiplicacion(Fp6 &a,Fp6 &b,Fp6 &c);
+    static void multiplicacionGamma(Fp6 &a,Fp6 &c);
+    static void multiplicacionPorDos(Fp6 &a,Fp6 &c);
+
     static void cuadrado(Fp6 &a, Fp6&c);
     static void inverso(Fp6 &a,Fp6 &aInv);
 
