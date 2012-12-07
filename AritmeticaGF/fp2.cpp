@@ -10,6 +10,7 @@ Fp Fp2::A;
 Fp Fp2::B;
 Fp Fp2::pMenos2;
 
+
 void Fp2::creaCampo(std::string &primo){
     Fp::setP(primo);
     Fp2::beta.crea(Fp::k);
@@ -94,7 +95,22 @@ void Fp2::inverso(Fp2 &a, Fp2 &inverso){
     Fp::exponenciacionVentanasDeslizantes(t0,pMenos2,t1);
     Fp::multiplicacionClasica(a[0],t1,inverso[0],true);
     Fp::multiplicacionClasica(a[1],t1,A,true);
-    Fp::resta(Fp::getP(),A,inverso[1],true);
+    Fp::resta(Fp::getP(),A,inverso[1]);
+}
+
+void Fp2::conjugado(Fp2 &a, Fp2 &b){
+    b[0].copia(a[0]);
+    Fp::resta(Fp::getP(),a[1],b[1]);
+}
+
+void Fp2::multiplicaPorXi(Fp2 &a, Fp2 &c){
+    c[1].copia(a[0]);
+    Fp::multiplicacionClasica(beta,a[1],c[0],true);
+}
+
+void Fp2::multiplicacionPorMenosUno(Fp2 &a, Fp2 &c){
+    Fp::resta(Fp::getP(),a[0],c[0]);
+    Fp::resta(Fp::getP(),a[1],c[1]);
 }
 
 void Fp2::estableceCoeficiente(std::string numero, int i){

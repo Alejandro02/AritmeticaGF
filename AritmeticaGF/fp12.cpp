@@ -6,6 +6,14 @@ Fp6 Fp12::auxiliar0;
 Fp6 Fp12::auxiliar1;
 Fp6 Fp12::auxiliar2;
 
+Fp2 Fp12::Xi;
+
+Fp2 Fp12::Gamma11;
+Fp2 Fp12::Gamma12;
+Fp2 Fp12::Gamma13;
+Fp2 Fp12::Gamma14;
+Fp2 Fp12::Gamma15;
+
 Fp12::Fp12(){
 }
 
@@ -16,6 +24,13 @@ void Fp12::creaCampo(std::string &primo){
     Fp6::crea(auxiliar0);
     Fp6::crea(auxiliar1);
     Fp6::crea(auxiliar2);
+    Fp2::crea(Xi);
+    Xi[1][0] = 1;
+    Fp2::crea(Gamma11);
+    Fp2::crea(Gamma12);
+    Fp2::crea(Gamma13);
+    Fp2::crea(Gamma14);
+    Fp2::crea(Gamma15);
 }
 
 void Fp12::suma(Fp12 &a, Fp12 &b, Fp12 &c){
@@ -74,7 +89,25 @@ void Fp12::cuadrado(Fp12 &a, Fp12 &c){
 }
 
 void Fp12::inverso(Fp12 &a, Fp12 &c){
+    //t0 = a0^2
+    Fp6::cuadrado(a[0],t0);
 
+    //t1 = a1^2
+    Fp6::cuadrado(a[1],t1);
+
+    //Gammat1
+    Fp6::multiplicacionGamma(t1,auxiliar0);
+    //t0 = t0 - Gammat1
+    Fp6::resta(t0,auxiliar0,auxiliar1);
+    //t1 = t0^-1
+    Fp6::inverso(auxiliar1,t1);
+
+    //c0 = a0t1
+    Fp6::multiplicacion(a[0],t1,c[0]);
+    //a1t1
+    Fp6::multiplicacion(a[1],t1,auxiliar2);
+    //c1 = -a1·t1
+    Fp6::multiplicacionPorMenosUno(auxiliar2,c[1]);
 }
 
 void Fp12::estableceCoeficiente(std::string numero, int i){

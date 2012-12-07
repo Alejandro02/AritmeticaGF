@@ -76,8 +76,7 @@ void Fp6::multiplicacion(Fp6 &a, Fp2 &b0, Fp2 &b1, Fp6 &c){
     auxiliar1.limpia();
     auxiliar2.limpia();
 
-    auxiliar1[1].copia(auxiliar3[0]);
-    Fp::multiplicacionClasica(auxiliar3[1],Fp2::beta,auxiliar1[0],true);
+    Fp2::multiplicaPorXi(auxiliar3,auxiliar1);
 
     Fp2::suma(auxiliar1,t0,c[0]);
 
@@ -108,8 +107,6 @@ void Fp6::multiplicacion(Fp6 &a, Fp2 &b0, Fp2 &b1, Fp6 &c){
 
     Fp2::multiplicacion(a[2],b0,auxiliar1);
     Fp2::suma(auxiliar1,t1,c[2]);
-
-
 }
 
 void Fp6::multiplicacion(Fp6 &a, Fp6 &b, Fp6 &c){
@@ -131,8 +128,7 @@ void Fp6::multiplicacion(Fp6 &a, Fp6 &b, Fp6 &c){
 
     auxiliar3.limpia();
 
-    auxiliar3[1].copia(auxiliar1[0]);
-    Fp::multiplicacionClasica(auxiliar1[1],Fp2::beta,auxiliar3[0],true);
+    Fp2::multiplicaPorXi(auxiliar1,auxiliar3);
 
     Fp2::suma(auxiliar3,t0,c[0]);
     //Termina [(a1+a2)(b1+b2)-t1-t2]Xi + t0
@@ -156,8 +152,7 @@ void Fp6::multiplicacion(Fp6 &a, Fp6 &b, Fp6 &c){
 
     auxiliar3.limpia();
 
-    auxiliar3[1].copia(t2[0]);
-    Fp::multiplicacionClasica(t2[1],Fp2::beta,auxiliar3[0],true);
+    Fp2::multiplicaPorXi(t2,auxiliar3);
 
     Fp2::suma(auxiliar1,auxiliar3,c[1]);
 
@@ -187,11 +182,7 @@ void Fp6::multiplicacion(Fp6 &a, Fp6 &b, Fp6 &c){
 }
 
 void Fp6::multiplicacionGamma(Fp6 &a, Fp6 &c){
-    auxiliar1.limpia();
-    auxiliar1[1].copia(a[2][0]);
-    Fp::multiplicacionClasica(a[2][1],Fp2::beta,auxiliar1[0],true);
-
-    c[0].copia(auxiliar1);
+    Fp2::multiplicaPorXi(a[2],c[0]);
     c[1].copia(a[0]);
     c[2].copia(a[1]);
 }
@@ -202,45 +193,70 @@ void Fp6::multiplicacionPorDos(Fp6 &a, Fp6 &c){
     Fp2::multiplicacion(a[2],dos,c[2]);
 }
 
+void Fp6::multiplicacionPorMenosUno(Fp6 &a, Fp6 &c){
+    Fp2::multiplicacionPorMenosUno(a[0],c[0]);
+    Fp2::multiplicacionPorMenosUno(a[1],c[1]);
+    Fp2::multiplicacionPorMenosUno(a[2],c[2]);
+}
+
+void Fp6::cuadradoFp4(Fp2 &a0, Fp2 &a1, Fp2 &c0, Fp2 &c1){
+    Fp2::cuadrado(a0,t0);
+    Fp2::cuadrado(a1,t1);
+
+    Fp2::multiplicaPorXi(t1,auxiliar0);
+
+    Fp2::suma(auxiliar0,t0,c0);
+
+    Fp2::suma(a0,a1,auxiliar1);
+
+    Fp2::cuadrado(auxiliar1,auxiliar2);
+
+    Fp2::resta(auxiliar2,t0,auxiliar3);
+    Fp2::resta(auxiliar3,t1,c1);
+}
+
 void Fp6::cuadrado(Fp6 &a, Fp6 &c){
+    auxiliar1.limpia();
+    auxiliar2.limpia();
+    auxiliar3.limpia();
+    auxiliar4.limpia();
+    auxiliar5.limpia();
 
-    //c4 = 2(a0xa1)
-    Fp2::multiplicacion(a[0],a[1],auxiliar5);
-    Fp2::multiplicacion(auxiliar5,dos,auxiliar4);
+    //aux4 = 2(a0xa1)
+    Fp2::multiplicacion(a[0],a[1],auxiliar1);
+    Fp2::multiplicacion(auxiliar1,dos,auxiliar4);
 
-    //c5 = (a2)^2
+    //aux5 = (a2)^2
     Fp2::cuadrado(a[2],auxiliar5);
 
-    //Xi(c5)
-    auxiliar3[1].copia(auxiliar5[0]);
-    Fp::multiplicacionClasica(auxiliar5[1],Fp2::beta,auxiliar3[0],true);
-    //c1 = Xi(c5) + c4
+    //Xi(aux5)
+    Fp2::multiplicaPorXi(auxiliar5,auxiliar3);
+
+    //c1 = Xi(aux5) + c4
     Fp2::suma(auxiliar3,auxiliar4,c[1]);
 
-    auxiliar3.limpia();
-    //c2 = c4 - c5
+    //aux2 = aux4 - aux5
     Fp2::resta(auxiliar4,auxiliar5,auxiliar2);
-    //c3 = a0^2
+    //aux3 = a0^2
     Fp2::cuadrado(a[0],auxiliar3);
-    //c4 = a0-a1+a2
+    //aux4 = a0-a1+a2
     Fp2::resta(a[0],a[1],t0);
     Fp2::suma(t0,a[2],auxiliar4);
 
-    //c5 = 2(a1xa2)
-    Fp2::multiplicacion(a[0],a[1],auxiliar1);
+    //aux5 = 2(a1xa2)
+    Fp2::multiplicacion(a[1],a[2],auxiliar1);
     Fp2::multiplicacion(auxiliar1,dos,auxiliar5);
-    //c4 = c4^2
+    //aux4 = aux4^2
     Fp2::cuadrado(auxiliar4,auxiliar4);
 
-    //Xi(c5)
-    auxiliar1.limpia();
-    auxiliar1[1].copia(auxiliar5[0]);
-    Fp::multiplicacionClasica(auxiliar5[1],Fp2::beta,auxiliar1[0],true);
-    //c0 = Xi(c5) + c3
+    //Xi(aux5)
+    Fp2::multiplicaPorXi(auxiliar5,auxiliar1);
+
+    //c0 = Xi(aux5) + aux3
     Fp2::suma(auxiliar1,auxiliar3,c[0]);
 
     t0.limpia();
-    //c2 = (c2 en realidad es auxiliar2 aqui) c2+c4+c5-c3
+    //c2 = aux2+aux4+aux5-aux3
     Fp2::suma(auxiliar2,auxiliar4,auxiliar1);
     Fp2::suma(auxiliar1,auxiliar5,t0);
     Fp2::resta(t0,auxiliar3,c[2]);
@@ -268,17 +284,13 @@ void Fp6::inverso(Fp6 &a, Fp6 &aInv){
     Fp2::multiplicacion(a[0],a[2],auxiliar4);
     Fp2::multiplicacion(a[1],a[2],auxiliar5);
 
-    //Xi(c5) ya deberia hacer funcion para esto xD
-    t0.limpia();
-    t0[1].copia(auxiliar5[0]);
-    Fp::multiplicacionClasica(auxiliar5[1],Fp2::beta,t0[0],true);
+    //Xi(c5)
+    Fp2::multiplicaPorXi(auxiliar5,t0);
 
     Fp2::resta(auxiliar0,t0,A);
 
     //Xi(c2)
-    t0.limpia();
-    t0[1].copia(auxiliar2[0]);
-    Fp::multiplicacionClasica(auxiliar2[1],Fp2::beta,t0[0],true);
+    Fp2::multiplicaPorXi(auxiliar2,t0);
 
     Fp2::resta(t0,auxiliar3,B);
 
@@ -287,18 +299,14 @@ void Fp6::inverso(Fp6 &a, Fp6 &aInv){
     Fp2::multiplicacion(a[0],A,auxiliar6);
 
     //Xi(a2)
-    t0.limpia();
-    t0[1].copia(a[2][0]);
-    Fp::multiplicacionClasica(a[2][1],Fp2::beta,t0[0],true);
+    Fp2::multiplicaPorXi(a[2],t0);
 
     t1.limpia();
     Fp2::multiplicacion(t0,B,t1);
     Fp2::suma(t1,auxiliar6,auxiliar6);
 
     //Xi(a1)
-    t0.limpia();
-    t0[1].copia(a[1][0]);
-    Fp::multiplicacionClasica(a[1][1],Fp2::beta,t0[0],true);
+    Fp2::multiplicaPorXi(a[1],t0);
 
     t1.limpia();
     Fp2::multiplicacion(t0,C,t1);
