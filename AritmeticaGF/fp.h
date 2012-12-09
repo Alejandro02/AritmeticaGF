@@ -75,8 +75,7 @@ private:
     /*La division necesita el corrimiento con copia*/
     static void calculaMu();
     static void inicializacionMontgomery();
-    std::vector<Fp> &operator /(Fp &b);
-    Fp &corrimientoUnBitDerechaConCopia();    
+    Fp &corrimientoUnBitDerechaConCopia();
     std::vector<Fp> &EuclidesExtendido(Fp a,Fp b);
     Fp &operator %(Fp &b);
 
@@ -139,6 +138,8 @@ public:
     static void reduccionBarret(Fp &t);    
     static void reduccionConRestauracion(Fp &t);
     static void reduccionSinRestauracion(Fp &t);
+
+    std::vector<Fp> &operator /(Fp &b);
 
     /*Operadores a nivel bits*/
     void operadorTilde();

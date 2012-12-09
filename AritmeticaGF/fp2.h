@@ -45,6 +45,8 @@ public:
     static void multiplicaPorXi(Fp2 &a,Fp2 &c);
 
     static void multiplicacionPorMenosUno(Fp2 &a,Fp2 &c);
+    static void exponenciacionIzquierdaADerecha(Fp2 &a,Fp &e,Fp2 &c);
+
 
     void estableceCoeficiente(std::string numero, int i);
     void limpia();

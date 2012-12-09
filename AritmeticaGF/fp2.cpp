@@ -100,7 +100,11 @@ void Fp2::inverso(Fp2 &a, Fp2 &inverso){
 
 void Fp2::conjugado(Fp2 &a, Fp2 &b){
     b[0].copia(a[0]);
-    Fp::resta(Fp::getP(),a[1],b[1]);
+    if(a[1] == 0){
+        b[1].limpia();
+    }else{
+        Fp::resta(Fp::getP(),a[1],b[1]);
+    }
 }
 
 void Fp2::multiplicaPorXi(Fp2 &a, Fp2 &c){
@@ -111,6 +115,21 @@ void Fp2::multiplicaPorXi(Fp2 &a, Fp2 &c){
 void Fp2::multiplicacionPorMenosUno(Fp2 &a, Fp2 &c){
     Fp::resta(Fp::getP(),a[0],c[0]);
     Fp::resta(Fp::getP(),a[1],c[1]);
+}
+
+void Fp2::exponenciacionIzquierdaADerecha(Fp2 &a, Fp &e, Fp2 &c){
+    Fp2 aux;
+    c.limpia();
+
+    c.copia(a);
+
+    for(int i = e.longitudEnBits()-2;i>= 0;i--){
+        Fp2::cuadrado(c,c);
+        if(e.bitEnPosicion(i) == 1){
+            Fp2::multiplicacion(c,a,aux);
+            c.copia(aux);
+        }
+    }
 }
 
 void Fp2::estableceCoeficiente(std::string numero, int i){
