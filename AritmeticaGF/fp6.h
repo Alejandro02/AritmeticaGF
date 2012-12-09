@@ -49,7 +49,7 @@ public:
     static void multiplicacionPorDos(Fp6 &a,Fp6 &c);
     static void multiplicacionPorMenosUno(Fp6 &a,Fp6 &c);
 
-
+    void copia(Fp6 &a);
     void estableceCoeficiente(std::string numero, int i);
     void limpia();
     void imprime(bool saltosDeLinea = true);

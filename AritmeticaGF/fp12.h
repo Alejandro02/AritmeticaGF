@@ -50,7 +50,7 @@ class Fp12{
     static void creaGamma1x();
     static void creaGamma2x();
     static void creaGamma3x();
-
+    static void creaExponentes();
 public:
     Fp12();
     static void creaCampo(std::string &primo);
@@ -65,17 +65,18 @@ public:
     static void cuadrado(Fp12 &a,Fp12 &c);
     //Algoritmo 23 - Inverso en Fp12
     static void inverso(Fp12 &a,Fp12 &c);
-    //Algoritmo 24 - Es otro cuadrado en Fp12, no se si lo necesite
-    //TODO:Algoritmo 25 - Exponenciacion de Fp12
-    //Algoritmo 26 - No necesario
-    //Algoritmo 27 - No necesario
+    //Algoritmo 25 - Exponenciacion de Fp12
+    static void exponenciacion(Fp12 &a,Fp &e,Fp12 &c);
     //Algoritmo 28 - Frobenius a la p
     static void frobeniusP(Fp12 &a,Fp12 &c);
     //Algoritmo 29 - Frobenius a la p^2
     static void frobeniusP2(Fp12 &a,Fp12 &c);
     //Algoritmo 30 - Frobenius a la p^3
     static void frobeniusP3(Fp12 &a,Fp12 &c);
+    //Algoritmo 31 - Exponenciacion Final
+    static void exponenciacionFinal(Fp12 &f,Fp12 &fr);
 
+    static void conjugado(Fp12 &a,Fp12 &b);
     void estableceCoeficiente(std::string numero, int i);
     void limpia();
     void imprime();

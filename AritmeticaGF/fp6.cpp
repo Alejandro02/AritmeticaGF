@@ -199,6 +199,12 @@ void Fp6::multiplicacionPorMenosUno(Fp6 &a, Fp6 &c){
     Fp2::multiplicacionPorMenosUno(a[2],c[2]);
 }
 
+void Fp6::copia(Fp6 &a){
+    (*this)[0].copia(a[0]);
+    (*this)[1].copia(a[1]);
+    (*this)[2].copia(a[2]);
+}
+
 void Fp6::cuadradoFp4(Fp2 &a0, Fp2 &a1, Fp2 &c0, Fp2 &c1){
     Fp2::cuadrado(a0,t0);
     Fp2::cuadrado(a1,t1);
