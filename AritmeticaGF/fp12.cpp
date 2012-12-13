@@ -205,7 +205,8 @@ void Fp12::cuadrado(Fp12 &a, Fp12 &c){
     //c0 = c2 + c0·c3
     Fp6::suma(auxiliar1,auxiliar2,c[0]);
     //c1 = 2c2
-    Fp6::multiplicacionPorDos(auxiliar1,c[1]);
+    //Fp6::multiplicacionPorDos(auxiliar1,c[1]);
+    Fp6::suma(auxiliar1,auxiliar1,c[1]);
     //c2 = Gamma·c2
     Fp6::multiplicacionGamma(auxiliar1,t1);
 
@@ -234,25 +235,77 @@ void Fp12::inverso(Fp12 &a, Fp12 &c){
     Fp6::multiplicacionPorMenosUno(auxiliar2,c[1]);
 }
 
+void Fp12::cuadrado24(Fp12 &a, Fp12 &c){
+    //a[0] es g
+    //a[1] es h
+    Fp2 t00,t01,t02,t10,t11,t12,aux;
+    Fp menosDos,tres("3"),dos("2");
+    Fp2 aux1,aux2;
+
+    Fp::resta(Fp::getP(),2,menosDos);
+
+    Fp6::cuadradoFp4(a[0][0],a[1][1],t00,t11);
+    Fp6::cuadradoFp4(a[1][0],a[0][2],t12,t01);
+    Fp6::cuadradoFp4(a[0][1],a[1][2],t02,aux);
+    Fp2::multiplicaPorXi(aux,t10);
+
+    Fp2::multiplicacion(a[0][0],menosDos,aux1);
+    Fp2::multiplicacion(t00,tres,aux2);
+    Fp2::suma(aux1,aux2,c[0][0]);
+
+    aux1.limpia();
+    aux2.limpia();
+
+    Fp2::multiplicacion(a[0][1],menosDos,aux1);
+    Fp2::multiplicacion(t01,tres,aux2);
+    Fp2::suma(aux1,aux2,c[0][1]);
+
+    aux1.limpia();
+    aux2.limpia();
+
+    Fp2::multiplicacion(a[0][2],menosDos,aux1);
+    Fp2::multiplicacion(t02,tres,aux2);
+    Fp2::suma(aux1,aux2,c[0][2]);
+
+    aux1.limpia();
+    aux2.limpia();
+
+    Fp2::multiplicacion(a[1][0],dos,aux1);
+    Fp2::multiplicacion(t10,tres,aux2);
+    Fp2::suma(aux1,aux2,c[1][0]);
+
+    aux1.limpia();
+    aux2.limpia();
+
+    Fp2::multiplicacion(a[1][1],dos,aux1);
+    Fp2::multiplicacion(t11,tres,aux2);
+    Fp2::suma(aux1,aux2,c[1][1]);
+
+    aux1.limpia();
+    aux2.limpia();
+
+    Fp2::multiplicacion(a[1][2],dos,aux1);
+    Fp2::multiplicacion(t12,tres,aux2);
+    Fp2::suma(aux1,aux2,c[1][2]);
+}
+
 void Fp12::exponenciacion(Fp12 &a, Fp &e, Fp12 &c){
-    Fp12 Q;
     Fp12 aux;
 
-    Q[0].copia(a[0]);
-    Q[1].copia(a[1]);
+    c[0].copia(a[0]);
+    c[1].copia(a[1]);
 
     for(int i = e.longitudEnBits()-2;i >= 0;i--){
-        Fp12::cuadrado(Q,aux);
-        Q[0].copia(aux[0]);
-        Q[1].copia(aux[1]);
+        Fp12::cuadrado(c,aux);
+        c[0].copia(aux[0]);
+        c[1].copia(aux[1]);
         if(e.bitEnPosicion(i) == 1){
-            Fp12::multiplicacion(Q,a,aux);
-            Q[0].copia(aux[0]);
-            Q[1].copia(aux[1]);
+            Fp12::multiplicacion(c,a,aux);
+            c[0].copia(aux[0]);
+            c[1].copia(aux[1]);
         }
     }
-    c[0].copia(Q[0]);
-    c[1].copia(Q[1]);
+
 }
 
 void Fp12::frobeniusP(Fp12 &a, Fp12 &c){
@@ -314,15 +367,15 @@ void Fp12::exponenciacionFinal(Fp12 &f, Fp12 &fr){
     //f = f1·f2
     Fp12::multiplicacion(f1,f2,aux1);
     //f^p^2
-    Fp12::frobeniusP2(aux1,ffrob2);
+    Fp12::frobeniusP2(aux1,ffrob2);    
     //f = f^p^2·f
-    Fp12::multiplicacion(ffrob2,aux1,faux);
+    Fp12::multiplicacion(ffrob2,aux1,faux);        
     /*pMenos1 es t, aux es t^2 y seis es t^3, fueron pre calculados*/
     //ft1 = f^t
     Fp12::exponenciacion(faux,pMenos1,ft1);
     //ft2 = f^t^2
     Fp12::exponenciacion(faux,aux,ft2);
-    //ft2 = f^t^3
+    //ft3 = f^t^3
     Fp12::exponenciacion(faux,seis,ft3);
     //fp1 = f^p
     Fp12::frobeniusP(faux,ffrob);
@@ -335,33 +388,40 @@ void Fp12::exponenciacionFinal(Fp12 &f, Fp12 &fr){
     //y0 = fp1·fp2·fp3
     Fp12::multiplicacion(aux1,ffrob3,y0);
     //y1 = f1
-    y1[0].copia(f1[0]);
-    y1[1].copia(f1[1]);
+    Fp12::copia(f1,y1);
     //y2 = ft2^p^2
     Fp12::frobeniusP2(ft2,y2);
     //y3 = ft1^p
+    aux1.limpia();
     Fp12::frobeniusP(ft1,aux1);
     //y3 = y3 Barra
     Fp12::conjugado(aux1,y3);
     //ft2^p
+    aux1.limpia();
     Fp12::frobeniusP(ft2,aux1);
     //y4 = (ft2^p)·ft1
+    aux2.limpia();
     Fp12::multiplicacion(aux1,ft1,aux2);
     //y4 = y4 Barra
     Fp12::conjugado(aux2,y4);
     //y5 = ft2 Barra
     Fp12::conjugado(ft2,y5);
     //ft3^p
+    aux1.limpia();
     Fp12::frobeniusP(ft3,aux1);
     //y6 = ft3^p·ft3
+    aux2.limpia();
     Fp12::multiplicacion(aux1,ft3,aux2);
     //y6 = y6 Barra
     Fp12::conjugado(aux2,y6);
     //y6^2
+    aux1.limpia();
     Fp12::cuadrado(y6,aux1);
     //y6^2·y4
+    aux2.limpia();
     Fp12::multiplicacion(aux1,y4,aux2);
     //t0 = y6^2·y4·y5
+    aux1.limpia();
     Fp12::multiplicacion(aux2,y5,aux1);
     //y3·y5
     Fp12::multiplicacion(y3,y5,aux3);
@@ -370,20 +430,21 @@ void Fp12::exponenciacionFinal(Fp12 &f, Fp12 &fr){
     //t0 = y2·t0
     Fp12::multiplicacion(aux1,y2,tao0);
     //t1^2
+    aux1.limpia();
     Fp12::cuadrado(aux4,aux1);
     //t1^2·t0
+    aux2.limpia();
     Fp12::multiplicacion(aux1,tao0,aux2);
     //t1 = (t1^2·t0)^2
     Fp12::cuadrado(aux2,tao1);
     //t0 = t1·y1
     Fp12::multiplicacion(tao1,y1,tao0);
     //t1 = t1·y0
+    aux1.limpia();
     Fp12::multiplicacion(tao1,y0,aux1);
     //t0 = t0^2
+    aux2.limpia();
     Fp12::cuadrado(tao0,aux2);
-    //  ^
-    //  |
-    //Este es el unico que no esta como lo dice en el articulo.
     //f = t1·t0
     Fp12::multiplicacion(aux1,aux2,fr);
 }
@@ -395,6 +456,11 @@ void Fp12::conjugado(Fp12 &a,Fp12 &b){
     Fp2::multiplicacionPorMenosUno(a[1][0],b[1][0]);
     Fp2::multiplicacionPorMenosUno(a[1][1],b[1][1]);
     Fp2::multiplicacionPorMenosUno(a[1][2],b[1][2]);
+}
+
+void Fp12::copia(Fp12 &a, Fp12 &b){
+    b[0].copia(a[0]);
+    b[1].copia(a[1]);
 }
 
 void Fp12::estableceCoeficiente(std::string numero, int i){

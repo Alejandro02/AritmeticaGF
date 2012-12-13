@@ -65,6 +65,8 @@ public:
     static void cuadrado(Fp12 &a,Fp12 &c);
     //Algoritmo 23 - Inverso en Fp12
     static void inverso(Fp12 &a,Fp12 &c);
+    //Algoritmo 24 - Cuadrado en Fp12
+    static void cuadrado24(Fp12 &a,Fp12 &c);
     //Algoritmo 25 - Exponenciacion de Fp12
     static void exponenciacion(Fp12 &a,Fp &e,Fp12 &c);
     //Algoritmo 28 - Frobenius a la p
@@ -77,9 +79,10 @@ public:
     static void exponenciacionFinal(Fp12 &f,Fp12 &fr);
 
     static void conjugado(Fp12 &a,Fp12 &b);
+    static void copia(Fp12 &a,Fp12 &b);
     void estableceCoeficiente(std::string numero, int i);
     void limpia();
-    void imprime();
+    void imprime();    
 
     Fp6 &operator [](int i);
 };
